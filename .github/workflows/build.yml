@@ -46,8 +46,9 @@ jobs:
           cp dist-extras/*.txt "$STAGE/" 2>/dev/null || true
           chmod +x "$STAGE/"*.command 2>/dev/null || true
           ln -s /Applications "$STAGE/应用程序"
+          # 卷名用中文（挂载后显示好看），文件名用 ASCII（GitHub 资产名不会被截断）
           hdiutil create -volname "YouTube邮箱采集器" \
-            -srcfolder "$STAGE" -ov -format UDZO "dist/YouTube邮箱采集器.dmg"
+            -srcfolder "$STAGE" -ov -format UDZO "dist/YouTubeEmailScraper.dmg"
 
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
