@@ -117,14 +117,7 @@ python youtube_email_scraper.py -f channels.txt --videos 15 -o results.json
 
 **Windows** (`build_windows.bat`, needs [python.org](https://www.python.org/downloads/) Python) — output: `dist\YouTubeEmailScraper.exe`.
 
-**Cloud (no Windows machine needed)** — CI config lives in `ci/build.yml`. Enable it by moving it into the workflow folder, then push (pushing under `.github/workflows/` requires a token with `workflow` scope):
-
-```bash
-mkdir -p .github/workflows && git mv ci/build.yml .github/workflows/build.yml
-git commit -m "enable CI" && git push    # gh auth refresh -h github.com -s workflow
-```
-
-Then **Actions → Build apps** (or push a `v*` tag) builds the Windows `.exe` + macOS `.dmg` and publishes them to **Releases**.
+**Cloud (no Windows machine needed)** — CI is set up in `.github/workflows/build.yml`. Run **Actions → Build apps**, or push a `v*` tag, to build the Windows `.exe` + macOS `.dmg` and publish them to **[Releases](../../releases)** automatically.
 
 ---
 
@@ -139,7 +132,7 @@ build_macos.sh              one-click macOS .dmg build
 build_windows.bat           one-click Windows .exe build
 dist-extras/                Gatekeeper "one-click unblock" helper + notes (bundled into the dmg)
 docs/                       interface & first-open guide images
-ci/build.yml                cloud build (move to .github/workflows/ to enable)
+.github/workflows/build.yml cloud build → Windows .exe + macOS .dmg to Releases
 ```
 
 ## Disclaimer
@@ -230,7 +223,7 @@ python youtube_email_scraper.py -f channels.txt --videos 15 -o results.json  # �
 
 - **macOS**：`bash build_macos.sh`。必须用**自带 Tcl/Tk ≥ 8.6** 的 Python（Homebrew Tk 9.0 或 python.org Tk 8.6）；脚本会自动挑选，并**拒绝系统 `/usr/bin/python3`**（它的 Tk 8.5 在新版 macOS 上一启动就 `Tcl_Panic` 崩溃）。
 - **Windows**：在装了 [python.org](https://www.python.org/downloads/) Python 的机器上双击 `build_windows.bat`，产出 `dist\YouTubeEmailScraper.exe`。
-- **云端（无需 Windows 机器）**：CI 配置在 `ci/build.yml`，移到 `.github/workflows/` 并推送即可启用（推送到该目录需要 token 带 `workflow` 权限）。启用后 **Actions → Build apps**（或打 `v*` tag）会同时构建 Windows `.exe` + macOS `.dmg` 并发布到 **Releases**。
+- **云端（无需 Windows 机器）**：CI 已配置在 `.github/workflows/build.yml`。运行 **Actions → Build apps**（或打 `v*` tag），即可同时构建 Windows `.exe` + macOS `.dmg` 并自动发布到 **[Releases](../../releases)**。
 
 ## 免责声明
 
