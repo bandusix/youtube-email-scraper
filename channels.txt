@@ -1,0 +1,5 @@
+# One YouTube channel per line. Blank lines and '# comments' are ignored.
+# Any of these forms work:
+https://www.youtube.com/@TechOnEarth
+@MrBeast
+# https://www.youtube.com/channel/UCX6OQ3DkcsbYNE6H8uQQuVA

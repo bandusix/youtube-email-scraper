@@ -1,0 +1,99 @@
+<svg viewBox="0 0 720 470" xmlns="http://www.w3.org/2000/svg" role="img" font-family="-apple-system, 'PingFang SC', 'Microsoft YaHei', 'Helvetica Neue', Arial, sans-serif">
+  <title>YouTube 邮箱采集器界面图解</title>
+  <desc>程序窗口分四步：① 粘贴频道链接，② 点获取/加载开始抓取，③ 在表格查看结果，④ 导出 Excel。</desc>
+
+  <rect x="0" y="0" width="720" height="470" rx="12" fill="#f6f8fa"/>
+
+  <!-- App window -->
+  <rect x="24" y="22" width="452" height="426" rx="10" fill="#ffffff" stroke="#d0d7de"/>
+  <!-- title bar -->
+  <path d="M24 32 a10 10 0 0 1 10 -10 h432 a10 10 0 0 1 10 10 v22 h-452 z" fill="#eef1f4"/>
+  <circle cx="42" cy="38" r="4" fill="#ff5f57"/>
+  <circle cx="56" cy="38" r="4" fill="#febc2e"/>
+  <circle cx="70" cy="38" r="4" fill="#28c840"/>
+  <text x="250" y="42" text-anchor="middle" font-size="13" fill="#1f2328">YouTube 邮箱采集器</text>
+
+  <!-- 1 input -->
+  <text x="40" y="74" font-size="12" fill="#57606a">① 粘贴 YouTube 频道链接（每行一个）</text>
+  <rect x="40" y="82" width="420" height="60" rx="4" fill="#ffffff" stroke="#d0d7de"/>
+  <text x="50" y="101" font-size="11" fill="#8c959f">https://www.youtube.com/@elebaotec</text>
+  <text x="50" y="117" font-size="11" fill="#8c959f">https://www.youtube.com/@tvboxminipc</text>
+  <text x="50" y="133" font-size="11" fill="#8c959f">https://www.youtube.com/@EliteTVBox</text>
+
+  <!-- 2 buttons -->
+  <rect x="40" y="156" width="104" height="28" rx="5" fill="#2da44e"/>
+  <text x="92" y="174" text-anchor="middle" font-size="12" fill="#ffffff">② 获取 / 加载</text>
+  <rect x="152" y="156" width="48" height="28" rx="5" fill="#f6f8fa" stroke="#d0d7de"/>
+  <text x="176" y="174" text-anchor="middle" font-size="12" fill="#8c959f">停止</text>
+  <rect x="208" y="156" width="72" height="28" rx="5" fill="#f6f8fa" stroke="#d0d7de"/>
+  <text x="244" y="174" text-anchor="middle" font-size="12" fill="#1f2328">清空结果</text>
+  <rect x="296" y="163" width="13" height="13" rx="3" fill="#ffffff" stroke="#57606a"/>
+  <path d="M299 169 l2.5 2.5 l4 -5" fill="none" stroke="#2da44e" stroke-width="1.6"/>
+  <text x="314" y="174" font-size="11" fill="#57606a">没邮箱时扫描视频简介</text>
+
+  <!-- 3 results table -->
+  <text x="40" y="206" font-size="12" fill="#57606a">③ 抓取结果（双击可打开频道）</text>
+  <rect x="40" y="214" width="420" height="150" rx="4" fill="#ffffff" stroke="#d0d7de"/>
+  <rect x="40" y="214" width="420" height="24" fill="#f1f3f5"/>
+  <line x1="160" y1="214" x2="160" y2="364" stroke="#eaecef"/>
+  <line x1="270" y1="214" x2="270" y2="364" stroke="#eaecef"/>
+  <line x1="400" y1="214" x2="400" y2="364" stroke="#eaecef"/>
+  <text x="48" y="230" font-size="11" font-weight="500" fill="#57606a">频道名称</text>
+  <text x="168" y="230" font-size="11" font-weight="500" fill="#57606a">频道链接</text>
+  <text x="278" y="230" font-size="11" font-weight="500" fill="#57606a">邮箱</text>
+  <text x="408" y="230" font-size="11" font-weight="500" fill="#57606a">订阅数</text>
+
+  <line x1="40" y1="266" x2="460" y2="266" stroke="#f0f1f3"/>
+  <line x1="40" y1="294" x2="460" y2="294" stroke="#f0f1f3"/>
+  <line x1="40" y1="322" x2="460" y2="322" stroke="#f0f1f3"/>
+
+  <text x="48" y="256" font-size="11" fill="#1f2328">Elebao Android TV…</text>
+  <text x="168" y="256" font-size="11" fill="#0969da">@elebaotec</text>
+  <text x="278" y="256" font-size="11" fill="#1a7f37">alex@elebaotec.com</text>
+  <text x="408" y="256" font-size="11" fill="#1f2328">1.23K</text>
+
+  <text x="48" y="284" font-size="11" fill="#1f2328">TV Box &amp; Mini PC</text>
+  <text x="168" y="284" font-size="11" fill="#0969da">@tvboxminipc</text>
+  <text x="278" y="284" font-size="11" fill="#1a7f37">slancy47@mail.ru</text>
+  <text x="408" y="284" font-size="11" fill="#1f2328">37.9K</text>
+
+  <text x="48" y="312" font-size="11" fill="#1f2328">Elite TvBox</text>
+  <text x="168" y="312" font-size="11" fill="#0969da">@EliteTVBox</text>
+  <text x="278" y="312" font-size="11" fill="#8c959f">—</text>
+  <text x="408" y="312" font-size="11" fill="#1f2328">4.79K</text>
+
+  <text x="48" y="340" font-size="11" fill="#1f2328">TV BOX OFICIAL</text>
+  <text x="168" y="340" font-size="11" fill="#0969da">@Tv-Box-Oficial</text>
+  <text x="278" y="340" font-size="11" fill="#8c959f">—</text>
+  <text x="408" y="340" font-size="11" fill="#1f2328">35K</text>
+
+  <!-- 4 export -->
+  <rect x="40" y="372" width="116" height="30" rx="6" fill="#0969da"/>
+  <text x="98" y="391" text-anchor="middle" font-size="12" fill="#ffffff">④ 导出 Excel</text>
+  <text x="168" y="391" font-size="11" fill="#57606a">完成：共 11 个频道，找到邮箱 2 个。</text>
+
+  <!-- annotations -->
+  <line x1="476" y1="112" x2="494" y2="112" stroke="#c0c6cc" stroke-dasharray="3 3"/>
+  <circle cx="506" cy="112" r="13" fill="#0969da"/>
+  <text x="506" y="116" text-anchor="middle" font-size="12" fill="#ffffff">1</text>
+  <text x="526" y="108" font-size="13" fill="#1f2328">粘贴链接</text>
+  <text x="526" y="125" font-size="11" fill="#57606a">每行一个频道链接</text>
+
+  <line x1="476" y1="170" x2="494" y2="170" stroke="#c0c6cc" stroke-dasharray="3 3"/>
+  <circle cx="506" cy="170" r="13" fill="#2da44e"/>
+  <text x="506" y="174" text-anchor="middle" font-size="12" fill="#ffffff">2</text>
+  <text x="526" y="166" font-size="13" fill="#1f2328">开始抓取</text>
+  <text x="526" y="183" font-size="11" fill="#57606a">点它加载，逐行出结果</text>
+
+  <line x1="476" y1="290" x2="494" y2="290" stroke="#c0c6cc" stroke-dasharray="3 3"/>
+  <circle cx="506" cy="290" r="13" fill="#0969da"/>
+  <text x="506" y="294" text-anchor="middle" font-size="12" fill="#ffffff">3</text>
+  <text x="526" y="286" font-size="13" fill="#1f2328">查看结果</text>
+  <text x="526" y="303" font-size="11" fill="#57606a">名称·邮箱·订阅数</text>
+
+  <line x1="476" y1="387" x2="494" y2="387" stroke="#c0c6cc" stroke-dasharray="3 3"/>
+  <circle cx="506" cy="387" r="13" fill="#0969da"/>
+  <text x="506" y="391" text-anchor="middle" font-size="12" fill="#ffffff">4</text>
+  <text x="526" y="383" font-size="13" fill="#1f2328">导出 Excel</text>
+  <text x="526" y="400" font-size="11" fill="#57606a">保存成 .xlsx 表格</text>
+</svg>

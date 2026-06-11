@@ -1,0 +1,61 @@
+<svg viewBox="0 0 720 330" xmlns="http://www.w3.org/2000/svg" role="img" font-family="-apple-system, 'PingFang SC', 'Microsoft YaHei', 'Helvetica Neue', Arial, sans-serif">
+  <title>首次打开指引</title>
+  <desc>把 dmg 发给别人后，对方双击「打不开请双击我.command」即可自动安装并打开；或手动右键打开 / 系统设置里点仍要打开。</desc>
+
+  <rect x="0" y="0" width="720" height="330" rx="12" fill="#f6f8fa"/>
+
+  <!-- DMG window -->
+  <rect x="24" y="24" width="316" height="282" rx="10" fill="#ffffff" stroke="#d0d7de"/>
+  <path d="M24 34 a10 10 0 0 1 10 -10 h296 a10 10 0 0 1 10 10 v20 h-316 z" fill="#eef1f4"/>
+  <circle cx="42" cy="40" r="4" fill="#ff5f57"/>
+  <circle cx="56" cy="40" r="4" fill="#febc2e"/>
+  <circle cx="70" cy="40" r="4" fill="#28c840"/>
+  <text x="182" y="44" text-anchor="middle" font-size="12" fill="#1f2328">YouTube邮箱采集器</text>
+
+  <!-- row1: app -->
+  <rect x="44" y="66" width="34" height="34" rx="7" fill="#2da44e"/>
+  <text x="61" y="88" text-anchor="middle" font-size="15" fill="#ffffff">▶</text>
+  <text x="90" y="88" font-size="12" fill="#1f2328">YouTube邮箱采集器.app</text>
+
+  <!-- row2: applications symlink -->
+  <path d="M46 120 h12 l4 4 h16 v22 h-32 z" fill="#6ca0dc"/>
+  <text x="90" y="140" font-size="12" fill="#1f2328">应用程序（拖进去安装）</text>
+
+  <!-- row3: HELPER (highlighted) -->
+  <rect x="36" y="158" width="292" height="44" rx="7" fill="#e6f1fb" stroke="#378add"/>
+  <rect x="44" y="166" width="34" height="28" rx="5" fill="#24292f"/>
+  <text x="61" y="185" text-anchor="middle" font-size="12" fill="#3fd07a">&gt;_</text>
+  <text x="90" y="184" font-size="12" fill="#0c447c">打不开请双击我.command</text>
+
+  <!-- row4: txt -->
+  <rect x="46" y="216" width="28" height="34" rx="4" fill="#ffffff" stroke="#b9c0c8"/>
+  <line x1="51" y1="225" x2="69" y2="225" stroke="#b9c0c8"/>
+  <line x1="51" y1="231" x2="69" y2="231" stroke="#b9c0c8"/>
+  <line x1="51" y1="237" x2="65" y2="237" stroke="#b9c0c8"/>
+  <text x="90" y="237" font-size="12" fill="#1f2328">① 打不开请先看我.txt</text>
+
+  <!-- arrow from helper to method 1 -->
+  <path d="M330 180 C 352 180 352 96 372 96" fill="none" stroke="#378add" stroke-width="2" stroke-dasharray="4 3"/>
+  <path d="M372 96 l-9 -4 l3 4 l-3 4 z" fill="#378add"/>
+
+  <!-- Right panel -->
+  <text x="384" y="44" font-size="15" fill="#1f2328">首次打开：两种方法（做一次即可）</text>
+
+  <circle cx="396" cy="92" r="13" fill="#2da44e"/>
+  <text x="396" y="96" text-anchor="middle" font-size="12" fill="#ffffff">1</text>
+  <text x="418" y="88" font-size="13" fill="#1f2328">双击「打不开请双击我.command」</text>
+  <text x="418" y="106" font-size="11" fill="#57606a">弹出的小黑窗点【打开】，它会自动安装好</text>
+  <text x="418" y="122" font-size="11" fill="#57606a">并打开 —— 最省事，推荐发给同事用这个</text>
+
+  <circle cx="396" cy="166" r="13" fill="#8c959f"/>
+  <text x="396" y="170" text-anchor="middle" font-size="12" fill="#ffffff">2</text>
+  <text x="418" y="162" font-size="13" fill="#1f2328">或手动放行</text>
+  <text x="418" y="180" font-size="11" fill="#57606a">右键点 App → 打开 → 再点“打开”；</text>
+  <text x="418" y="196" font-size="11" fill="#57606a">新版 macOS：系统设置 → 隐私与安全性 →</text>
+  <text x="418" y="212" font-size="11" fill="#57606a">拉到最底，点「仍要打开」</text>
+
+  <line x1="384" y1="236" x2="700" y2="236" stroke="#e2e5e9"/>
+  <text x="384" y="260" font-size="11" fill="#57606a">· 安全提示 ≠ 有毒，只是没花钱买苹果签名</text>
+  <text x="384" y="280" font-size="11" fill="#57606a">· 只需放行一次，之后双击图标直接打开</text>
+  <text x="384" y="300" font-size="11" fill="#57606a">· Intel 和 Apple 芯片的 Mac 都支持（通用版）</text>
+</svg>
