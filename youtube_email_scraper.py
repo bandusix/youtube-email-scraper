@@ -61,9 +61,17 @@ try:
     from utils.obfuscation import extract_emails_enhanced
     from utils.proxy_manager import ProxyManager, fetch_with_proxy
     from utils.cache import RequestCache, cached_get
+    from utils.rate_limit import RateLimiter, UserAgentRotator
+    from utils.logging_config import setup_logging, get_logger
+    from utils.concurrent import ConcurrentScraper, ScrapingStats
     HAVE_UTILS = True
 except ImportError:
     HAVE_UTILS = False
+    # Fallback logger
+    import logging
+    logging.basicConfig(level=logging.WARNING)
+    def get_logger(name=None):
+        return logging.getLogger(name or 'youtube_email_scraper')
 
 try:
     from enrichment.social_media import scrape_social_emails
@@ -73,6 +81,23 @@ try:
     HAVE_ENRICHMENT = True
 except ImportError:
     HAVE_ENRICHMENT = False
+
+# Global logger (will be configured in main)
+logger = get_logger()
+
+# Global rate limiter and UA rotator (will be initialized in main)
+_rate_limiter = None
+_ua_rotator = None
+
+
+def get_rate_limiter():
+    """Get global rate limiter instance."""
+    return _rate_limiter
+
+
+def get_ua_rotator():
+    """Get global UA rotator instance."""
+    return _ua_rotator
 
 # --------------------------------------------------------------------------- #
 # Configuration
@@ -390,16 +415,46 @@ def extract_channel_meta(data: dict, page_html: str) -> dict:
 
 def fetch(session: requests.Session, url: str, retries: int = 3,
           timeout: int = 25) -> str:
+    """Fetch URL with rate limiting, retries, and logging."""
+    global _rate_limiter
+
+    # Apply rate limiting if available
+    if _rate_limiter:
+        from urllib.parse import urlparse
+        domain = urlparse(url).netloc
+        _rate_limiter.wait(domain)
+        logger.debug(f"Rate limit check passed for {domain}")
+
     last_err = None
     for attempt in range(retries):
         try:
+            logger.debug(f"Fetching {url} (attempt {attempt + 1}/{retries})")
             r = session.get(url, headers=HEADERS, timeout=timeout)
+
+            # Check for rate limiting
+            if r.status_code == 429:
+                logger.warning(f"Rate limited by {urlparse(url).netloc}")
+                if _rate_limiter:
+                    retry_after = int(r.headers.get('Retry-After', 60))
+                    _rate_limiter.report_rate_limit(urlparse(url).netloc, retry_after)
+                last_err = "Rate limited (HTTP 429)"
+                time.sleep(retry_after if 'retry_after' in locals() else 60)
+                continue
+
             if r.status_code == 200:
+                logger.debug(f"Successfully fetched {url}")
                 return r.text
+
             last_err = f"HTTP {r.status_code}"
+            logger.warning(f"Fetch failed with status {r.status_code}")
+
         except requests.RequestException as e:
             last_err = str(e)
+            logger.warning(f"Fetch failed (attempt {attempt + 1}/{retries}): {e}")
+
         time.sleep(1.5 * (attempt + 1))
+
+    logger.error(f"All fetch attempts failed for {url}: {last_err}")
     raise RuntimeError(last_err or "request failed")
 
 
@@ -672,11 +727,46 @@ def build_parser() -> argparse.ArgumentParser:
     cache_group.add_argument("--cache-ttl", type=int, default=3600,
                             help="cache TTL in seconds (default: 3600 = 1 hour)")
 
+    # 🆕 v2.2 options
+    perf_group = p.add_argument_group("performance options",
+                                      "Performance and reliability improvements")
+    perf_group.add_argument("--verbose", "-v", action="store_true",
+                           help="enable verbose logging")
+    perf_group.add_argument("--log-file", metavar="FILE",
+                           help="save detailed logs to file")
+    perf_group.add_argument("--concurrent", action="store_true",
+                           help="enable concurrent processing (faster)")
+    perf_group.add_argument("--workers", type=int, default=5,
+                           help="number of concurrent workers (default 5)")
+
     return p
 
 
 def main(argv: list[str] | None = None) -> int:
+    global _rate_limiter, _ua_rotator, logger
+
     args = build_parser().parse_args(argv)
+
+    # 🆕 Setup logging first
+    if HAVE_UTILS:
+        try:
+            from utils.logging_config import setup_logging as _setup_logging
+            logger = _setup_logging(
+                verbose=args.verbose if hasattr(args, 'verbose') else False,
+                log_file=args.log_file if hasattr(args, 'log_file') else None
+            )
+            logger.info("YouTube Email Scraper starting...")
+        except:
+            pass  # Fall back to basic logging
+
+    # 🆕 Initialize rate limiter
+    if HAVE_UTILS:
+        try:
+            _rate_limiter = RateLimiter(requests_per_second=0.5)  # Conservative: 1 request per 2 seconds
+            _ua_rotator = UserAgentRotator()
+            logger.info("Rate limiter and UA rotator initialized")
+        except:
+            logger.warning("Could not initialize rate limiter")
 
     inputs: list[str] = list(args.url)
     if args.file:
@@ -757,6 +847,21 @@ def main(argv: list[str] | None = None) -> int:
         session = requests.Session()
         session.headers.update(HEADERS)
 
+    # 🆕 Apply UA rotation
+    if _ua_rotator:
+        session.headers['User-Agent'] = _ua_rotator.get_next()
+        logger.debug(f"Using User-Agent: {session.headers['User-Agent'][:50]}...")
+
+    # 🆕 Initialize statistics
+    stats = None
+    if HAVE_UTILS:
+        try:
+            stats = ScrapingStats(total=len(inputs))
+            stats.start_time = time.time()
+            logger.info(f"Processing {len(inputs)} channels...")
+        except:
+            pass
+
     results: list[ChannelResult] = []
     total = len(inputs)
     for idx, raw in enumerate(inputs, 1):
@@ -770,14 +875,23 @@ def main(argv: list[str] | None = None) -> int:
         )
 
         results.append(res)
+
+        # 🆕 Update statistics
+        if stats:
+            stats.record_result(res)
+
         if res.status == "ok":
             print(f"OK  {res.emails_str} (from: {res.source})", file=sys.stderr)
+            logger.info(f"✓ {raw}: {res.emails_str} (source: {res.source})")
         elif res.status == "verification_required":
             print("sign-in / manual verification required", file=sys.stderr)
+            logger.info(f"⚠ {raw}: verification required")
         elif res.status == "no_email":
             print("no email found", file=sys.stderr)
+            logger.info(f"⊘ {raw}: no email")
         else:
             print(f"ERROR {res.error}", file=sys.stderr)
+            logger.error(f"✗ {raw}: {res.error}")
 
         # Get new session for next request if using proxies
         if idx < total:
@@ -794,17 +908,25 @@ def main(argv: list[str] | None = None) -> int:
     print(f"\nScanned {total} channel(s); found emails for {found}.",
           file=sys.stderr)
 
+    # 🆕 Show detailed statistics report
+    if stats:
+        stats.end_time = time.time()
+        print(stats.format_report(), file=sys.stderr)
+        logger.info(f"Session complete: {stats.successful}/{stats.total} successful")
+
     # Show proxy stats if used
     if proxy_manager:
-        stats = proxy_manager.get_stats()
-        print(f"Proxy stats: {stats['available']}/{stats['total']} available, "
-              f"{stats['failed']} failed", file=sys.stderr)
+        stats_data = proxy_manager.get_stats()
+        print(f"Proxy stats: {stats_data['available']}/{stats_data['total']} available, "
+              f"{stats_data['failed']} failed", file=sys.stderr)
+        logger.info(f"Proxy usage: {stats_data}")
 
     # Show cache stats if used
     if cache:
-        stats = cache.get_stats()
-        print(f"Cache stats: {stats['valid_entries']} entries, "
-              f"{stats['total_size_mb']} MB", file=sys.stderr)
+        cache_stats = cache.get_stats()
+        print(f"Cache stats: {cache_stats['valid_entries']} entries, "
+              f"{cache_stats['total_size_mb']} MB", file=sys.stderr)
+        logger.info(f"Cache usage: {cache_stats}")
 
     if args.output:
         if args.output.lower().endswith(".json"):
