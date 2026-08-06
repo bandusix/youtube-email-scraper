@@ -864,40 +864,96 @@ def main(argv: list[str] | None = None) -> int:
 
     results: list[ChannelResult] = []
     total = len(inputs)
-    for idx, raw in enumerate(inputs, 1):
-        print(f"[{idx}/{total}] {raw} ...", end=" ", flush=True, file=sys.stderr)
 
-        res = scrape_channel(
-            session, raw,
-            video_limit=args.videos,
-            enrichment=enrichment_config,
-            cache=cache
-        )
+    # 🆕 v2.3: Concurrent processing
+    if hasattr(args, 'concurrent') and args.concurrent and HAVE_UTILS:
+        logger.info(f"Using concurrent processing with {args.workers} workers")
 
-        results.append(res)
-
-        # 🆕 Update statistics
-        if stats:
-            stats.record_result(res)
-
-        if res.status == "ok":
-            print(f"OK  {res.emails_str} (from: {res.source})", file=sys.stderr)
-            logger.info(f"✓ {raw}: {res.emails_str} (source: {res.source})")
-        elif res.status == "verification_required":
-            print("sign-in / manual verification required", file=sys.stderr)
-            logger.info(f"⚠ {raw}: verification required")
-        elif res.status == "no_email":
-            print("no email found", file=sys.stderr)
-            logger.info(f"⊘ {raw}: no email")
-        else:
-            print(f"ERROR {res.error}", file=sys.stderr)
-            logger.error(f"✗ {raw}: {res.error}")
-
-        # Get new session for next request if using proxies
-        if idx < total:
-            time.sleep(args.delay)
+        def session_factory():
+            """Create a new session for each worker."""
             if proxy_manager:
-                session = proxy_manager.get_session(HEADERS)
+                s = proxy_manager.get_session(HEADERS)
+            else:
+                s = requests.Session()
+                s.headers.update(HEADERS)
+
+            if _ua_rotator:
+                s.headers['User-Agent'] = _ua_rotator.get_next()
+            return s
+
+        def progress_callback(completed, total_items, result):
+            """Progress callback for concurrent scraper."""
+            if result.status == "ok":
+                logger.info(f"✓ [{completed}/{total_items}] {result.input}: {result.emails_str}")
+            elif result.status == "verification_required":
+                logger.info(f"⚠ [{completed}/{total_items}] {result.input}: verification required")
+            elif result.status == "no_email":
+                logger.info(f"⊘ [{completed}/{total_items}] {result.input}: no email")
+            else:
+                logger.error(f"✗ [{completed}/{total_items}] {result.input}: {result.error}")
+
+        try:
+            concurrent_scraper = ConcurrentScraper(
+                scrape_func=scrape_channel,
+                max_workers=args.workers,
+                progress_callback=progress_callback
+            )
+
+            results = concurrent_scraper.scrape_all(
+                inputs,
+                session_factory=session_factory,
+                video_limit=args.videos,
+                enrichment=enrichment_config,
+                cache=cache
+            )
+
+            # Get stats from concurrent scraper
+            if concurrent_scraper.stats:
+                stats = concurrent_scraper.stats
+
+            logger.info(f"Concurrent processing complete")
+
+        except Exception as e:
+            logger.error(f"Concurrent processing failed: {e}, falling back to serial")
+            # Fall back to serial processing
+            args.concurrent = False
+
+    # Serial processing (original or fallback)
+    if not (hasattr(args, 'concurrent') and args.concurrent):
+        for idx, raw in enumerate(inputs, 1):
+            print(f"[{idx}/{total}] {raw} ...", end=" ", flush=True, file=sys.stderr)
+
+            res = scrape_channel(
+                session, raw,
+                video_limit=args.videos,
+                enrichment=enrichment_config,
+                cache=cache
+            )
+
+            results.append(res)
+
+            # Update statistics
+            if stats:
+                stats.record_result(res)
+
+            if res.status == "ok":
+                print(f"OK  {res.emails_str} (from: {res.source})", file=sys.stderr)
+                logger.info(f"✓ {raw}: {res.emails_str} (source: {res.source})")
+            elif res.status == "verification_required":
+                print("sign-in / manual verification required", file=sys.stderr)
+                logger.info(f"⚠ {raw}: verification required")
+            elif res.status == "no_email":
+                print("no email found", file=sys.stderr)
+                logger.info(f"⊘ {raw}: no email")
+            else:
+                print(f"ERROR {res.error}", file=sys.stderr)
+                logger.error(f"✗ {raw}: {res.error}")
+
+            # Get new session for next request if using proxies
+            if idx < total:
+                time.sleep(args.delay)
+                if proxy_manager:
+                    session = proxy_manager.get_session(HEADERS)
 
     # console summary
     print()
