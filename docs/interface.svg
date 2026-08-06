@@ -1,109 +1,132 @@
-<svg viewBox="0 0 720 470" xmlns="http://www.w3.org/2000/svg" role="img" font-family="-apple-system, 'PingFang SC', 'Microsoft YaHei', 'Helvetica Neue', Arial, sans-serif">
-  <title>YouTube 邮箱采集器界面图解</title>
-  <desc>程序窗口分四步：① 粘贴频道链接，② 点获取/加载开始抓取，③ 查看结果并处理需验证邮箱，④ 导出 Excel。</desc>
+<svg viewBox="0 0 760 510" xmlns="http://www.w3.org/2000/svg" role="img" font-family="-apple-system, 'PingFang SC', 'Microsoft YaHei', 'Helvetica Neue', Arial, sans-serif">
+  <title>YouTube Email Scraper Interface / YouTube 邮箱采集器界面图解</title>
+  <desc>程序窗口分四步：① 粘贴频道链接，② 点获取/加载开始抓取（可启用增强搜索），③ 查看结果并处理需验证邮箱，④ 导出 Excel。</desc>
 
-  <rect x="0" y="0" width="720" height="470" rx="12" fill="#f6f8fa"/>
+  <rect x="0" y="0" width="760" height="510" rx="12" fill="#f6f8fa"/>
 
   <!-- App window -->
-  <rect x="24" y="22" width="452" height="426" rx="10" fill="#ffffff" stroke="#d0d7de"/>
+  <rect x="24" y="22" width="492" height="466" rx="10" fill="#ffffff" stroke="#d0d7de"/>
   <!-- title bar -->
-  <path d="M24 32 a10 10 0 0 1 10 -10 h432 a10 10 0 0 1 10 10 v22 h-452 z" fill="#eef1f4"/>
+  <path d="M24 32 a10 10 0 0 1 10 -10 h472 a10 10 0 0 1 10 10 v22 h-492 z" fill="#eef1f4"/>
   <circle cx="42" cy="38" r="4" fill="#ff5f57"/>
   <circle cx="56" cy="38" r="4" fill="#febc2e"/>
   <circle cx="70" cy="38" r="4" fill="#28c840"/>
-  <text x="250" y="42" text-anchor="middle" font-size="13" fill="#1f2328">YouTube 邮箱采集器</text>
+  <text x="260" y="42" text-anchor="middle" font-size="13" fill="#1f2328">YouTube Email Scraper / YouTube 邮箱采集器</text>
 
   <!-- 1 input -->
-  <text x="40" y="74" font-size="12" fill="#57606a">① 粘贴 YouTube 频道链接（每行一个）</text>
-  <rect x="40" y="82" width="420" height="60" rx="4" fill="#ffffff" stroke="#d0d7de"/>
+  <text x="40" y="74" font-size="12" fill="#57606a">① Paste YouTube channel links (one per line) / 粘贴 YouTube 频道链接（每行一个）</text>
+  <rect x="40" y="82" width="460" height="60" rx="4" fill="#ffffff" stroke="#d0d7de"/>
   <text x="50" y="101" font-size="11" fill="#8c959f">https://www.youtube.com/@elebaotec</text>
   <text x="50" y="117" font-size="11" fill="#8c959f">https://www.youtube.com/@tvboxminipc</text>
   <text x="50" y="133" font-size="11" fill="#8c959f">https://www.youtube.com/@EliteTVBox</text>
 
-  <!-- 2 buttons -->
+  <!-- 2 buttons and options -->
   <rect x="40" y="156" width="104" height="28" rx="5" fill="#2da44e"/>
-  <text x="92" y="174" text-anchor="middle" font-size="12" fill="#ffffff">② 获取 / 加载</text>
+  <text x="92" y="174" text-anchor="middle" font-size="12" fill="#ffffff">② Get / 获取</text>
   <rect x="152" y="156" width="48" height="28" rx="5" fill="#f6f8fa" stroke="#d0d7de"/>
-  <text x="176" y="174" text-anchor="middle" font-size="12" fill="#8c959f">停止</text>
-  <rect x="208" y="156" width="72" height="28" rx="5" fill="#f6f8fa" stroke="#d0d7de"/>
-  <text x="244" y="174" text-anchor="middle" font-size="12" fill="#1f2328">清空结果</text>
+  <text x="176" y="174" text-anchor="middle" font-size="12" fill="#8c959f">Stop / 停止</text>
+  <rect x="208" y="156" width="78" height="28" rx="5" fill="#f6f8fa" stroke="#d0d7de"/>
+  <text x="247" y="174" text-anchor="middle" font-size="12" fill="#1f2328">Clear / 清空</text>
+
+  <!-- Option 1: Scan videos -->
   <rect x="296" y="163" width="13" height="13" rx="3" fill="#ffffff" stroke="#57606a"/>
   <path d="M299 169 l2.5 2.5 l4 -5" fill="none" stroke="#2da44e" stroke-width="1.6"/>
-  <text x="314" y="174" font-size="11" fill="#57606a">没邮箱时扫描视频简介</text>
+  <text x="314" y="174" font-size="11" fill="#57606a">Scan video descriptions / 扫描视频简介</text>
+
+  <!-- 🆕 Option 2: Enable enrichment -->
+  <rect x="40" y="193" width="13" height="13" rx="3" fill="#2da44e" stroke="#2da44e"/>
+  <path d="M43 199 l2.5 2.5 l4 -5" fill="none" stroke="#ffffff" stroke-width="1.6"/>
+  <text x="58" y="204" font-size="11" fill="#1a7f37" font-weight="500">✨ Enable Enhanced Search / 启用增强搜索</text>
+  <text x="58" y="217" font-size="9" fill="#57606a">(Social Media + Link-in-bio + Website / 社交媒体+Link-in-bio+网站)</text>
 
   <!-- 3 results table -->
-  <text x="40" y="206" font-size="12" fill="#57606a">③ 抓取结果（双击可打开频道）</text>
-  <rect x="40" y="214" width="420" height="150" rx="4" fill="#ffffff" stroke="#d0d7de"/>
-  <rect x="40" y="214" width="420" height="24" fill="#f1f3f5"/>
-  <line x1="145" y1="214" x2="145" y2="364" stroke="#eaecef"/>
-  <line x1="245" y1="214" x2="245" y2="364" stroke="#eaecef"/>
-  <line x1="365" y1="214" x2="365" y2="364" stroke="#eaecef"/>
-  <line x1="415" y1="214" x2="415" y2="364" stroke="#eaecef"/>
-  <text x="48" y="230" font-size="11" font-weight="500" fill="#57606a">频道名称</text>
-  <text x="153" y="230" font-size="11" font-weight="500" fill="#57606a">频道链接</text>
-  <text x="253" y="230" font-size="11" font-weight="500" fill="#57606a">邮箱</text>
-  <text x="373" y="230" font-size="11" font-weight="500" fill="#57606a">订阅数</text>
-  <text x="423" y="230" font-size="11" font-weight="500" fill="#57606a">状态</text>
+  <text x="40" y="244" font-size="12" fill="#57606a">③ Results (double-click to open) / 抓取结果（双击可打开频道）</text>
+  <rect x="40" y="252" width="460" height="150" rx="4" fill="#ffffff" stroke="#d0d7de"/>
+  <rect x="40" y="252" width="460" height="24" fill="#f1f3f5"/>
+  <line x1="155" y1="252" x2="155" y2="402" stroke="#eaecef"/>
+  <line x1="265" y1="252" x2="265" y2="402" stroke="#eaecef"/>
+  <line x1="395" y1="252" x2="395" y2="402" stroke="#eaecef"/>
+  <line x1="450" y1="252" x2="450" y2="402" stroke="#eaecef"/>
+  <text x="48" y="268" font-size="11" font-weight="500" fill="#57606a">Name / 名称</text>
+  <text x="163" y="268" font-size="11" font-weight="500" fill="#57606a">Link / 链接</text>
+  <text x="273" y="268" font-size="11" font-weight="500" fill="#57606a">Email / 邮箱</text>
+  <text x="403" y="268" font-size="11" font-weight="500" fill="#57606a">Subs / 订阅</text>
+  <text x="458" y="268" font-size="11" font-weight="500" fill="#57606a">状态</text>
 
-  <line x1="40" y1="266" x2="460" y2="266" stroke="#f0f1f3"/>
-  <line x1="40" y1="294" x2="460" y2="294" stroke="#f0f1f3"/>
-  <line x1="40" y1="322" x2="460" y2="322" stroke="#f0f1f3"/>
+  <line x1="40" y1="304" x2="500" y2="304" stroke="#f0f1f3"/>
+  <line x1="40" y1="332" x2="500" y2="332" stroke="#f0f1f3"/>
+  <line x1="40" y1="360" x2="500" y2="360" stroke="#f0f1f3"/>
 
-  <text x="48" y="256" font-size="11" fill="#1f2328">Elebao Android TV…</text>
-  <text x="153" y="256" font-size="11" fill="#0969da">@elebaotec</text>
-  <text x="253" y="256" font-size="10" fill="#1a7f37">alex@elebaotec.com</text>
-  <text x="373" y="256" font-size="11" fill="#1f2328">1.23K</text>
-  <text x="423" y="256" font-size="10" fill="#1a7f37">成功</text>
+  <text x="48" y="294" font-size="11" fill="#1f2328">Elebao Android TV…</text>
+  <text x="163" y="294" font-size="11" fill="#0969da">@elebaotec</text>
+  <text x="273" y="294" font-size="10" fill="#1a7f37">alex@elebaotec.com</text>
+  <text x="403" y="294" font-size="11" fill="#1f2328">1.23K</text>
+  <text x="458" y="294" font-size="10" fill="#1a7f37">成功</text>
+  <text x="273" y="303" font-size="8" fill="#6e7781">from: about_description</text>
 
-  <text x="48" y="284" font-size="11" fill="#1f2328">TV Box &amp; Mini PC</text>
-  <text x="153" y="284" font-size="11" fill="#0969da">@tvboxminipc</text>
-  <text x="253" y="284" font-size="10" fill="#1a7f37">slancy47@mail.ru</text>
-  <text x="373" y="284" font-size="11" fill="#1f2328">37.9K</text>
-  <text x="423" y="284" font-size="10" fill="#1a7f37">成功</text>
+  <text x="48" y="322" font-size="11" fill="#1f2328">TV Box &amp; Mini PC</text>
+  <text x="163" y="322" font-size="11" fill="#0969da">@tvboxminipc</text>
+  <text x="273" y="322" font-size="10" fill="#1a7f37">contact@tvbox.io</text>
+  <text x="403" y="322" font-size="11" fill="#1f2328">37.9K</text>
+  <text x="458" y="322" font-size="10" fill="#1a7f37">成功</text>
+  <text x="273" y="331" font-size="8" fill="#6e7781">🆕 from: enrichment:instagram:tvboxminipc</text>
 
-  <text x="48" y="312" font-size="11" fill="#1f2328">Elite TvBox</text>
-  <text x="153" y="312" font-size="11" fill="#0969da">@EliteTVBox</text>
-  <text x="253" y="312" font-size="10" fill="#b06f00">打开验证页后录入</text>
-  <text x="373" y="312" font-size="11" fill="#1f2328">4.79K</text>
-  <text x="423" y="312" font-size="9" fill="#b06f00">需验证</text>
+  <text x="48" y="350" font-size="11" fill="#1f2328">Elite TvBox</text>
+  <text x="163" y="350" font-size="11" fill="#0969da">@EliteTVBox</text>
+  <text x="273" y="350" font-size="10" fill="#1a7f37">info@elitetv.com</text>
+  <text x="403" y="350" font-size="11" fill="#1f2328">4.79K</text>
+  <text x="458" y="350" font-size="10" fill="#1a7f37">成功</text>
+  <text x="273" y="359" font-size="8" fill="#6e7781">🆕 from: enrichment:linktree:https://linktr.ee/elite</text>
 
-  <text x="48" y="340" font-size="11" fill="#1f2328">TV BOX OFICIAL</text>
-  <text x="153" y="340" font-size="11" fill="#0969da">@Tv-Box-Oficial</text>
-  <text x="253" y="340" font-size="11" fill="#8c959f">—</text>
-  <text x="373" y="340" font-size="11" fill="#1f2328">35K</text>
-  <text x="423" y="340" font-size="10" fill="#8c959f">无邮箱</text>
+  <text x="48" y="378" font-size="11" fill="#1f2328">TV BOX OFICIAL</text>
+  <text x="163" y="378" font-size="11" fill="#0969da">@Tv-Box-Oficial</text>
+  <text x="273" y="378" font-size="10" fill="#1a7f37">hello@oficial.com</text>
+  <text x="403" y="378" font-size="11" fill="#1f2328">35K</text>
+  <text x="458" y="378" font-size="10" fill="#1a7f37">成功</text>
+  <text x="273" y="387" font-size="8" fill="#6e7781">🆕 from: enrichment:website:oficial.com</text>
 
   <!-- 4 export -->
-  <rect x="40" y="372" width="104" height="30" rx="6" fill="#0969da"/>
-  <text x="92" y="391" text-anchor="middle" font-size="12" fill="#ffffff">④ 导出 Excel</text>
-  <rect x="152" y="372" width="98" height="30" rx="6" fill="#f6f8fa" stroke="#d0d7de"/>
-  <text x="201" y="391" text-anchor="middle" font-size="11" fill="#1f2328">打开验证页</text>
-  <rect x="258" y="372" width="104" height="30" rx="6" fill="#f6f8fa" stroke="#d0d7de"/>
-  <text x="310" y="391" text-anchor="middle" font-size="11" fill="#1f2328">人工录入邮箱</text>
-  <text x="40" y="421" font-size="11" fill="#57606a">完成：公开邮箱 2 个，需登录验证 1 个。</text>
+  <rect x="40" y="410" width="104" height="30" rx="6" fill="#0969da"/>
+  <text x="92" y="429" text-anchor="middle" font-size="12" fill="#ffffff">④ Export Excel</text>
+  <rect x="152" y="410" width="98" height="30" rx="6" fill="#f6f8fa" stroke="#d0d7de"/>
+  <text x="201" y="429" text-anchor="middle" font-size="11" fill="#1f2328">Open verify / 打开验证页</text>
+  <rect x="258" y="410" width="122" height="30" rx="6" fill="#f6f8fa" stroke="#d0d7de"/>
+  <text x="319" y="429" text-anchor="middle" font-size="11" fill="#1f2328">Manual entry / 人工录入</text>
+
+  <text x="40" y="461" font-size="11" fill="#1a7f37">✅ Success: 4 emails found (Enhanced mode) / 完成：找到 4 个邮箱（增强模式）</text>
 
   <!-- annotations -->
-  <line x1="476" y1="112" x2="494" y2="112" stroke="#c0c6cc" stroke-dasharray="3 3"/>
-  <circle cx="506" cy="112" r="13" fill="#0969da"/>
-  <text x="506" y="116" text-anchor="middle" font-size="12" fill="#ffffff">1</text>
-  <text x="526" y="108" font-size="13" fill="#1f2328">粘贴链接</text>
-  <text x="526" y="125" font-size="11" fill="#57606a">每行一个频道链接</text>
+  <line x1="516" y1="112" x2="534" y2="112" stroke="#c0c6cc" stroke-dasharray="3 3"/>
+  <circle cx="546" cy="112" r="13" fill="#0969da"/>
+  <text x="546" y="116" text-anchor="middle" font-size="12" fill="#ffffff">1</text>
+  <text x="566" y="108" font-size="13" fill="#1f2328">Paste links</text>
+  <text x="566" y="125" font-size="11" fill="#57606a">粘贴频道链接</text>
 
-  <line x1="476" y1="170" x2="494" y2="170" stroke="#c0c6cc" stroke-dasharray="3 3"/>
-  <circle cx="506" cy="170" r="13" fill="#2da44e"/>
-  <text x="506" y="174" text-anchor="middle" font-size="12" fill="#ffffff">2</text>
-  <text x="526" y="166" font-size="13" fill="#1f2328">开始抓取</text>
-  <text x="526" y="183" font-size="11" fill="#57606a">点它加载，逐行出结果</text>
+  <line x1="516" y1="205" x2="534" y2="205" stroke="#c0c6cc" stroke-dasharray="3 3"/>
+  <circle cx="546" cy="205" r="13" fill="#2da44e"/>
+  <text x="546" y="209" text-anchor="middle" font-size="12" fill="#ffffff">2</text>
+  <text x="566" y="197" font-size="13" fill="#1f2328">Start scraping</text>
+  <text x="566" y="214" font-size="11" fill="#57606a">开始抓取</text>
+  <rect x="566" y="220" width="170" height="32" rx="4" fill="#dafbe1" stroke="#1a7f37"/>
+  <text x="572" y="233" font-size="10" fill="#1a7f37" font-weight="500">🆕 Check "Enhanced"</text>
+  <text x="572" y="245" font-size="9" fill="#1a7f37">勾选"启用增强搜索"</text>
 
-  <line x1="476" y1="290" x2="494" y2="290" stroke="#c0c6cc" stroke-dasharray="3 3"/>
-  <circle cx="506" cy="290" r="13" fill="#0969da"/>
-  <text x="506" y="294" text-anchor="middle" font-size="12" fill="#ffffff">3</text>
-  <text x="526" y="286" font-size="13" fill="#1f2328">查看结果</text>
-  <text x="526" y="303" font-size="11" fill="#57606a">名称·邮箱·验证状态</text>
+  <line x1="516" y1="328" x2="534" y2="328" stroke="#c0c6cc" stroke-dasharray="3 3"/>
+  <circle cx="546" cy="328" r="13" fill="#0969da"/>
+  <text x="546" y="332" text-anchor="middle" font-size="12" fill="#ffffff">3</text>
+  <text x="566" y="324" font-size="13" fill="#1f2328">View results</text>
+  <text x="566" y="341" font-size="11" fill="#57606a">查看结果</text>
+  <rect x="566" y="347" width="170" height="32" rx="4" fill="#dafbe1" stroke="#1a7f37"/>
+  <text x="572" y="360" font-size="10" fill="#1a7f37" font-weight="500">🆕 Shows email source</text>
+  <text x="572" y="372" font-size="9" fill="#1a7f37">显示邮箱来源</text>
 
-  <line x1="476" y1="387" x2="494" y2="387" stroke="#c0c6cc" stroke-dasharray="3 3"/>
-  <circle cx="506" cy="387" r="13" fill="#0969da"/>
-  <text x="506" y="391" text-anchor="middle" font-size="12" fill="#ffffff">4</text>
-  <text x="526" y="383" font-size="13" fill="#1f2328">导出 Excel</text>
-  <text x="526" y="400" font-size="11" fill="#57606a">验证后也可继续导出</text>
+  <line x1="516" y1="425" x2="534" y2="425" stroke="#c0c6cc" stroke-dasharray="3 3"/>
+  <circle cx="546" cy="425" r="13" fill="#0969da"/>
+  <text x="546" y="429" text-anchor="middle" font-size="12" fill="#ffffff">4</text>
+  <text x="566" y="421" font-size="13" fill="#1f2328">Export Excel</text>
+  <text x="566" y="438" font-size="11" fill="#57606a">导出 Excel</text>
+
+  <!-- Success rate badge -->
+  <rect x="566" y="470" width="170" height="28" rx="6" fill="#0969da"/>
+  <text x="651" y="489" text-anchor="middle" font-size="12" fill="#ffffff" font-weight="500">Success Rate: 65-75%</text>
 </svg>

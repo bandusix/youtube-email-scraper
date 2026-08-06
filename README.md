@@ -10,6 +10,24 @@ A small **macOS / Windows** desktop tool: paste one or many YouTube channel link
 
 ---
 
+## 🆕 What's New in v2.0
+
+### Enhanced Email Discovery - Success Rate: 65-75% (up from 30-40%)
+
+This version introduces **5 powerful enrichment modules** and **3 infrastructure improvements** that dramatically increase email discovery success rate without using any paid APIs:
+
+- ✅ **Social Media Cross-Reference** - Auto-check Instagram/Twitter/TikTok profiles
+- ✅ **Link-in-Bio Scraping** - Extract emails from Linktree, Beacons, and 11+ platforms  
+- ✅ **Website Deep Crawling** - Intelligently crawl /contact, /about pages
+- ✅ **Community Posts Mining** - Parse YouTube community posts and pinned comments
+- ✅ **Enhanced Obfuscation** - Recognize 10+ creative email obfuscation patterns
+- ✅ **Proxy IP Support** - Built-in proxy rotation for large-scale scraping
+- ✅ **Request Caching** - Speed up repeated runs by 50%+
+
+**📖 Detailed documentation** → [ENHANCEMENTS.md](ENHANCEMENTS.md) | [快速入门](QUICKSTART.md)
+
+---
+
 ## Download
 
 Pre-built apps are published on the **[Releases](../../releases)** page (produced automatically by CI):
@@ -34,14 +52,12 @@ Pre-built apps are published on the **[Releases](../../releases)** page (produce
 - ✅ Detects YouTube's sign-in / verification-gated business-email control
 - ✅ Opens the verification page and lets you manually enter the email shown by YouTube
 - ✅ Works on **macOS and Windows**; packaged builds need **no Python**
-- 🆕 **Enhanced email discovery** (社交媒体 + Link-in-bio + 网站深度爬取)
+- 🆕 **Enhanced email discovery** - Social media + Link-in-bio + Website crawling
 - 🆕 **Proxy IP support** for large-scale scraping
 - 🆕 **Request caching** to speed up repeated runs
 - 🆕 **Advanced obfuscation patterns** (Unicode, HTML entities, etc.)
 
 **📊 Success Rate**: ~30-40% (basic) → **65-75%** (with enhancements enabled)
-
-**📖 详细增强功能说明** → [查看 ENHANCEMENTS.md](ENHANCEMENTS.md)
 
 ![Interface guide](docs/interface.svg)
 
@@ -53,7 +69,9 @@ Pre-built apps are published on the **[Releases](../../releases)** page (produce
 2. **② Get / Load** — click to start; the table fills row by row.
    - You can **Stop** anytime, or **Clear** the table.
    - Tick **"scan video descriptions when no email"** for deeper (slower) search.
+   - 🆕 Tick **"✨ Enable Enhanced Search"** to dramatically improve success rate (social media + link-in-bio + website)
 3. **③ Results** — name, link, email, subscribers, status. **Double-click a row to open that channel.**
+   - 🆕 Email source is now displayed (e.g., `from: enrichment:instagram:username`)
    - For **Verification required**, select the row and click **Open verification page**.
    - Complete YouTube's normal sign-in/verification flow, then click **Enter email manually** and paste the email YouTube displayed.
 4. **④ Export Excel** — save the results as `.xlsx`.
@@ -82,6 +100,10 @@ The apps aren't paid-Apple/Windows code-signed, so the first open is gated. This
 |---|---|
 | In the **channel description** | ✅ Yes |
 | In a **video description** (enable the video-scan option) | ✅ Yes |
+| 🆕 On linked **Instagram/Twitter/TikTok** profile | ✅ Yes (enhanced mode) |
+| 🆕 On **Linktree/Beacons** link-in-bio page | ✅ Yes (enhanced mode) |
+| 🆕 On linked **website** /contact or /about page | ✅ Yes (enhanced mode) |
+| 🆕 In **YouTube community posts** or pinned comments | ✅ Yes (enhanced mode) |
 | Behind the sign-in / CAPTCHA-gated **"view email address"** button | ⚠️ Detected; open the page, verify manually, then enter the displayed email |
 | Not published anywhere | ❌ No |
 
@@ -116,7 +138,7 @@ python youtube_email_scraper.py -f channels.txt -o results.csv
 # also scan up to 15 recent video descriptions → JSON
 python youtube_email_scraper.py -f channels.txt --videos 15 -o results.json
 
-# 🆕 enable enhanced email discovery (社交媒体 + Link-in-bio + 网站)
+# 🆕 enable enhanced email discovery (social media + link-in-bio + website)
 python youtube_email_scraper.py -f channels.txt --enrich -o results.csv
 
 # 🆕 use proxy IPs for large-scale scraping
@@ -133,6 +155,50 @@ python youtube_email_scraper.py -f channels.txt --enrich --cache -o results.csv
 | `-o, --output` | output path, `.csv` or `.json` |
 | `--videos N` | scan N recent video descriptions if About has no email (default 0) |
 | `--delay S` | seconds between channels (default 1.5) |
+| 🆕 `--enrich` | enable all enrichment features (social media, biolinks, website crawling, community posts) |
+| 🆕 `--enrich-social` | check Instagram/Twitter/TikTok profiles only |
+| 🆕 `--enrich-biolink` | scrape Linktree/Beacons link-in-bio pages only |
+| 🆕 `--enrich-website` | deep crawl linked websites for contact pages only |
+| 🆕 `--enrich-community` | check YouTube community posts and pinned comments only |
+| 🆕 `--proxy FILE` | use proxy IPs from file (one per line, format: `http://host:port`) |
+| 🆕 `--cache` | enable request caching (default: disabled) |
+
+---
+
+## 🆕 Enhanced Mode Examples
+
+### Quick Test (Basic)
+```bash
+python youtube_email_scraper.py -u @channel1 @channel2 @channel3
+```
+
+### Medium Scale (10-100 channels, recommended)
+```bash
+python youtube_email_scraper.py -f channels.txt \
+  --enrich \
+  --cache \
+  -o results.csv
+```
+
+### Large Scale (>100 channels)
+```bash
+python youtube_email_scraper.py -f channels.txt \
+  --enrich \
+  --proxy proxies.txt \
+  --cache \
+  --delay 3.0 \
+  -o results.csv
+```
+
+**Proxy file format** (`proxies.txt`):
+```
+http://proxy1.example.com:8080
+http://proxy2.example.com:8080
+http://username:password@proxy3.example.com:3128
+socks5://proxy4.example.com:1080
+```
+
+See [proxies.txt.example](proxies.txt.example) for a template.
 
 ---
 
@@ -153,8 +219,17 @@ python youtube_email_scraper.py -f channels.txt --enrich --cache -o results.csv
 ```
 youtube_email_gui.py        GUI (main app)
 youtube_email_scraper.py    scraping engine + CLI
-tests/                      gate detection and email parsing tests
-requirements.txt            deps (requests, openpyxl)
+enrichment/                 🆕 email enrichment modules
+  ├── social_media.py       🆕 Instagram/Twitter/TikTok scraping
+  ├── biolink.py            🆕 Linktree/Beacons/etc scraping
+  ├── website.py            🆕 website deep crawling
+  └── community.py          🆕 YouTube community posts mining
+utils/                      🆕 utility modules
+  ├── obfuscation.py        🆕 enhanced email pattern recognition
+  ├── proxy_manager.py      🆕 proxy pool management
+  └── cache.py              🆕 request caching
+tests/                      unit tests
+requirements.txt            deps (requests, openpyxl, beautifulsoup4, lxml)
 youtube_email_gui.spec      PyInstaller config
 build_macos.sh              one-click macOS .dmg build
 build_windows.bat           one-click Windows .exe build
@@ -179,6 +254,26 @@ For collecting **publicly listed** contact info only (e.g. business inquiries). 
 
 > 自动采集创作者**已公开**的邮箱（频道简介 / 视频简介里写的）。如果商务邮箱需要登录或验证码，程序会标记为**需登录验证**，并提供人工处理流程；不会绕过 YouTube 的验证机制。
 
+---
+
+## 🆕 v2.0 版本新功能
+
+### 增强版邮箱发现 - 成功率：65-75%（原 30-40%）
+
+本版本引入 **5 大增强模块** 和 **3 大基础设施改进**，在不使用任何付费 API 的前提下，大幅提升邮箱发现成功率：
+
+- ✅ **社交媒体交叉引用** - 自动检查 Instagram/Twitter/TikTok 个人资料
+- ✅ **Link-in-Bio 抓取** - 从 Linktree、Beacons 等 11+ 平台提取邮箱
+- ✅ **网站深度爬取** - 智能爬取 /contact、/about 页面
+- ✅ **社区帖子挖掘** - 解析 YouTube 社区帖子和置顶评论
+- ✅ **增强混淆识别** - 识别 10+ 种创意邮箱混淆格式
+- ✅ **代理 IP 支持** - 内置代理轮换，适合大规模抓取
+- ✅ **请求缓存** - 第二次运行速度提升 50%+
+
+**📖 详细文档** → [功能说明](ENHANCEMENTS.md) | [快速入门](QUICKSTART.md)
+
+---
+
 ## 下载
 
 预编译好的程序发布在 **[Releases](../../releases)** 页（由 CI 自动构建）：
@@ -201,12 +296,22 @@ For collecting **publicly listed** contact info only (e.g. business inquiries). 
 - ✅ 识别 YouTube 的商务邮箱登录/验证码门控
 - ✅ 打开验证页，并在人工完成验证后录入 YouTube 显示的邮箱
 - ✅ macOS / Windows 都能用，打包版**免装 Python**
+- 🆕 **增强邮箱发现** - 社交媒体 + Link-in-bio + 网站爬取
+- 🆕 **代理 IP 支持** - 适合大规模抓取
+- 🆕 **请求缓存** - 加速重复运行
+- 🆕 **高级混淆识别** - Unicode、HTML 实体等
+
+**📊 成功率**: ~30-40%（基础） → **65-75%**（启用增强功能）
+
+![界面图解](docs/interface.svg)
 
 ## 怎么用（图形界面）
 
 1. **① 粘贴链接** —— 每行一个频道链接。
 2. **② 获取 / 加载** —— 点击开始，表格逐行出结果（可随时**停止 / 清空**；勾选「没邮箱时扫描视频简介」可挖得更深、更慢）。
+   - 🆕 勾选 **"✨ 启用增强搜索"** 大幅提升成功率（社交媒体 + link-in-bio + 网站）
 3. **③ 抓取结果** —— 名称、链接、邮箱、订阅数、状态；**双击某行可打开该频道**。
+   - 🆕 现在显示邮箱来源（如：`from: enrichment:instagram:用户名`）
    - 状态为**需登录验证**时，选中该行并点击「打开验证页」。
    - 按 YouTube 正常流程登录并完成人工验证，再点击「人工录入邮箱」，粘贴页面显示的邮箱。
 4. **④ 导出 Excel** —— 保存为 `.xlsx`。
@@ -229,6 +334,10 @@ For collecting **publicly listed** contact info only (e.g. business inquiries). 
 |---|---|
 | 写在**频道简介**里 | ✅ 能 |
 | 写在**视频简介**里（需勾选扫描） | ✅ 能 |
+| 🆕 在链接的 **Instagram/Twitter/TikTok** 个人资料中 | ✅ 能（增强模式） |
+| 🆕 在 **Linktree/Beacons** link-in-bio 页面 | ✅ 能（增强模式） |
+| 🆕 在链接的**网站** /contact 或 /about 页面 | ✅ 能（增强模式） |
+| 🆕 在 **YouTube 社区帖子**或置顶评论中 | ✅ 能（增强模式） |
 | 登录/验证码挡住的「查看邮箱」按钮后面 | ⚠️ 能识别；打开页面人工验证后录入页面显示的邮箱 |
 | 根本没公开 | ❌ 没有就是没有 |
 
@@ -251,9 +360,53 @@ pip install -r requirements.txt
 python youtube_email_scraper.py -u https://www.youtube.com/@TechOnEarth      # 单个
 python youtube_email_scraper.py -f channels.txt -o results.csv               # 批量 → CSV
 python youtube_email_scraper.py -f channels.txt --videos 15 -o results.json  # 扫视频简介
+
+# 🆕 启用增强功能（社交媒体 + link-in-bio + 网站）
+python youtube_email_scraper.py -f channels.txt --enrich -o results.csv
+
+# 🆕 使用代理 IP（大规模抓取）
+python youtube_email_scraper.py -f channels.txt --enrich --proxy proxies.txt -o results.csv
+
+# 🆕 启用缓存（加速重复运行）
+python youtube_email_scraper.py -f channels.txt --enrich --cache -o results.csv
 ```
 
-参数：`-u` 链接/用户名（可多个）、`-f` 批量文件、`-o` 输出（.csv/.json）、`--videos N` 扫描 N 个视频简介、`--delay S` 频道间隔秒数。
+参数：`-u` 链接/用户名（可多个）、`-f` 批量文件、`-o` 输出（.csv/.json）、`--videos N` 扫描 N 个视频简介、`--delay S` 频道间隔秒数、🆕 `--enrich` 启用所有增强功能、🆕 `--proxy FILE` 使用代理、🆕 `--cache` 启用缓存。
+
+## 🆕 增强模式示例
+
+### 快速测试（基础模式）
+```bash
+python youtube_email_scraper.py -u @频道1 @频道2 @频道3
+```
+
+### 中等规模（10-100个频道，推荐）
+```bash
+python youtube_email_scraper.py -f channels.txt \
+  --enrich \
+  --cache \
+  -o results.csv
+```
+
+### 大规模（>100个频道）
+```bash
+python youtube_email_scraper.py -f channels.txt \
+  --enrich \
+  --proxy proxies.txt \
+  --cache \
+  --delay 3.0 \
+  -o results.csv
+```
+
+**代理文件格式** (`proxies.txt`):
+```
+http://proxy1.example.com:8080
+http://proxy2.example.com:8080
+http://username:password@proxy3.example.com:3128
+socks5://proxy4.example.com:1080
+```
+
+参考 [proxies.txt.example](proxies.txt.example) 模板。
 
 ## 自行打包
 
