@@ -1,6 +1,6 @@
 <svg viewBox="0 0 720 470" xmlns="http://www.w3.org/2000/svg" role="img" font-family="-apple-system, 'PingFang SC', 'Microsoft YaHei', 'Helvetica Neue', Arial, sans-serif">
   <title>YouTube 邮箱采集器界面图解</title>
-  <desc>程序窗口分四步：① 粘贴频道链接，② 点获取/加载开始抓取，③ 在表格查看结果，④ 导出 Excel。</desc>
+  <desc>程序窗口分四步：① 粘贴频道链接，② 点获取/加载开始抓取，③ 查看结果并处理需验证邮箱，④ 导出 Excel。</desc>
 
   <rect x="0" y="0" width="720" height="470" rx="12" fill="#f6f8fa"/>
 
@@ -35,42 +35,52 @@
   <text x="40" y="206" font-size="12" fill="#57606a">③ 抓取结果（双击可打开频道）</text>
   <rect x="40" y="214" width="420" height="150" rx="4" fill="#ffffff" stroke="#d0d7de"/>
   <rect x="40" y="214" width="420" height="24" fill="#f1f3f5"/>
-  <line x1="160" y1="214" x2="160" y2="364" stroke="#eaecef"/>
-  <line x1="270" y1="214" x2="270" y2="364" stroke="#eaecef"/>
-  <line x1="400" y1="214" x2="400" y2="364" stroke="#eaecef"/>
+  <line x1="145" y1="214" x2="145" y2="364" stroke="#eaecef"/>
+  <line x1="245" y1="214" x2="245" y2="364" stroke="#eaecef"/>
+  <line x1="365" y1="214" x2="365" y2="364" stroke="#eaecef"/>
+  <line x1="415" y1="214" x2="415" y2="364" stroke="#eaecef"/>
   <text x="48" y="230" font-size="11" font-weight="500" fill="#57606a">频道名称</text>
-  <text x="168" y="230" font-size="11" font-weight="500" fill="#57606a">频道链接</text>
-  <text x="278" y="230" font-size="11" font-weight="500" fill="#57606a">邮箱</text>
-  <text x="408" y="230" font-size="11" font-weight="500" fill="#57606a">订阅数</text>
+  <text x="153" y="230" font-size="11" font-weight="500" fill="#57606a">频道链接</text>
+  <text x="253" y="230" font-size="11" font-weight="500" fill="#57606a">邮箱</text>
+  <text x="373" y="230" font-size="11" font-weight="500" fill="#57606a">订阅数</text>
+  <text x="423" y="230" font-size="11" font-weight="500" fill="#57606a">状态</text>
 
   <line x1="40" y1="266" x2="460" y2="266" stroke="#f0f1f3"/>
   <line x1="40" y1="294" x2="460" y2="294" stroke="#f0f1f3"/>
   <line x1="40" y1="322" x2="460" y2="322" stroke="#f0f1f3"/>
 
   <text x="48" y="256" font-size="11" fill="#1f2328">Elebao Android TV…</text>
-  <text x="168" y="256" font-size="11" fill="#0969da">@elebaotec</text>
-  <text x="278" y="256" font-size="11" fill="#1a7f37">alex@elebaotec.com</text>
-  <text x="408" y="256" font-size="11" fill="#1f2328">1.23K</text>
+  <text x="153" y="256" font-size="11" fill="#0969da">@elebaotec</text>
+  <text x="253" y="256" font-size="10" fill="#1a7f37">alex@elebaotec.com</text>
+  <text x="373" y="256" font-size="11" fill="#1f2328">1.23K</text>
+  <text x="423" y="256" font-size="10" fill="#1a7f37">成功</text>
 
   <text x="48" y="284" font-size="11" fill="#1f2328">TV Box &amp; Mini PC</text>
-  <text x="168" y="284" font-size="11" fill="#0969da">@tvboxminipc</text>
-  <text x="278" y="284" font-size="11" fill="#1a7f37">slancy47@mail.ru</text>
-  <text x="408" y="284" font-size="11" fill="#1f2328">37.9K</text>
+  <text x="153" y="284" font-size="11" fill="#0969da">@tvboxminipc</text>
+  <text x="253" y="284" font-size="10" fill="#1a7f37">slancy47@mail.ru</text>
+  <text x="373" y="284" font-size="11" fill="#1f2328">37.9K</text>
+  <text x="423" y="284" font-size="10" fill="#1a7f37">成功</text>
 
   <text x="48" y="312" font-size="11" fill="#1f2328">Elite TvBox</text>
-  <text x="168" y="312" font-size="11" fill="#0969da">@EliteTVBox</text>
-  <text x="278" y="312" font-size="11" fill="#8c959f">—</text>
-  <text x="408" y="312" font-size="11" fill="#1f2328">4.79K</text>
+  <text x="153" y="312" font-size="11" fill="#0969da">@EliteTVBox</text>
+  <text x="253" y="312" font-size="10" fill="#b06f00">打开验证页后录入</text>
+  <text x="373" y="312" font-size="11" fill="#1f2328">4.79K</text>
+  <text x="423" y="312" font-size="9" fill="#b06f00">需验证</text>
 
   <text x="48" y="340" font-size="11" fill="#1f2328">TV BOX OFICIAL</text>
-  <text x="168" y="340" font-size="11" fill="#0969da">@Tv-Box-Oficial</text>
-  <text x="278" y="340" font-size="11" fill="#8c959f">—</text>
-  <text x="408" y="340" font-size="11" fill="#1f2328">35K</text>
+  <text x="153" y="340" font-size="11" fill="#0969da">@Tv-Box-Oficial</text>
+  <text x="253" y="340" font-size="11" fill="#8c959f">—</text>
+  <text x="373" y="340" font-size="11" fill="#1f2328">35K</text>
+  <text x="423" y="340" font-size="10" fill="#8c959f">无邮箱</text>
 
   <!-- 4 export -->
-  <rect x="40" y="372" width="116" height="30" rx="6" fill="#0969da"/>
-  <text x="98" y="391" text-anchor="middle" font-size="12" fill="#ffffff">④ 导出 Excel</text>
-  <text x="168" y="391" font-size="11" fill="#57606a">完成：共 11 个频道，找到邮箱 2 个。</text>
+  <rect x="40" y="372" width="104" height="30" rx="6" fill="#0969da"/>
+  <text x="92" y="391" text-anchor="middle" font-size="12" fill="#ffffff">④ 导出 Excel</text>
+  <rect x="152" y="372" width="98" height="30" rx="6" fill="#f6f8fa" stroke="#d0d7de"/>
+  <text x="201" y="391" text-anchor="middle" font-size="11" fill="#1f2328">打开验证页</text>
+  <rect x="258" y="372" width="104" height="30" rx="6" fill="#f6f8fa" stroke="#d0d7de"/>
+  <text x="310" y="391" text-anchor="middle" font-size="11" fill="#1f2328">人工录入邮箱</text>
+  <text x="40" y="421" font-size="11" fill="#57606a">完成：公开邮箱 2 个，需登录验证 1 个。</text>
 
   <!-- annotations -->
   <line x1="476" y1="112" x2="494" y2="112" stroke="#c0c6cc" stroke-dasharray="3 3"/>
@@ -89,11 +99,11 @@
   <circle cx="506" cy="290" r="13" fill="#0969da"/>
   <text x="506" y="294" text-anchor="middle" font-size="12" fill="#ffffff">3</text>
   <text x="526" y="286" font-size="13" fill="#1f2328">查看结果</text>
-  <text x="526" y="303" font-size="11" fill="#57606a">名称·邮箱·订阅数</text>
+  <text x="526" y="303" font-size="11" fill="#57606a">名称·邮箱·验证状态</text>
 
   <line x1="476" y1="387" x2="494" y2="387" stroke="#c0c6cc" stroke-dasharray="3 3"/>
   <circle cx="506" cy="387" r="13" fill="#0969da"/>
   <text x="506" y="391" text-anchor="middle" font-size="12" fill="#ffffff">4</text>
   <text x="526" y="383" font-size="13" fill="#1f2328">导出 Excel</text>
-  <text x="526" y="400" font-size="11" fill="#57606a">保存成 .xlsx 表格</text>
+  <text x="526" y="400" font-size="11" fill="#57606a">验证后也可继续导出</text>
 </svg>

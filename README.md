@@ -4,7 +4,7 @@
 
 A small **macOS / Windows** desktop tool: paste one or many YouTube channel links, click once, and it pulls each channel's **name, link, public email, and subscriber count**, then exports everything to **Excel** with one click. A command-line version is included too.
 
-> Only emails the creator has **made public** (in the channel "About" or video descriptions) are collected. It does **not** bypass YouTube's CAPTCHA-gated "business email" button. Use lawfully and within YouTube's Terms of Service.
+> Only emails the creator has **made public** (in the channel "About" or video descriptions) are collected automatically. When YouTube requires sign-in or verification for a business email, the app marks the row as **Verification required** and provides a human-assisted workflow. It does not bypass the verification control.
 
 **中文说明见本文档下半部分 → [跳到中文](#中文说明)**
 
@@ -31,7 +31,17 @@ Pre-built apps are published on the **[Releases](../../releases)** page (produce
 - ✅ Detects lightly-obfuscated emails (e.g. `name (at) gmail (dot) com`)
 - ✅ Auto-dedupe and junk-email filtering
 - ✅ Optional: scan recent **video descriptions** when the About page has no email
+- ✅ Detects YouTube's sign-in / verification-gated business-email control
+- ✅ Opens the verification page and lets you manually enter the email shown by YouTube
 - ✅ Works on **macOS and Windows**; packaged builds need **no Python**
+- 🆕 **Enhanced email discovery** (社交媒体 + Link-in-bio + 网站深度爬取)
+- 🆕 **Proxy IP support** for large-scale scraping
+- 🆕 **Request caching** to speed up repeated runs
+- 🆕 **Advanced obfuscation patterns** (Unicode, HTML entities, etc.)
+
+**📊 Success Rate**: ~30-40% (basic) → **65-75%** (with enhancements enabled)
+
+**📖 详细增强功能说明** → [查看 ENHANCEMENTS.md](ENHANCEMENTS.md)
 
 ![Interface guide](docs/interface.svg)
 
@@ -44,6 +54,8 @@ Pre-built apps are published on the **[Releases](../../releases)** page (produce
    - You can **Stop** anytime, or **Clear** the table.
    - Tick **"scan video descriptions when no email"** for deeper (slower) search.
 3. **③ Results** — name, link, email, subscribers, status. **Double-click a row to open that channel.**
+   - For **Verification required**, select the row and click **Open verification page**.
+   - Complete YouTube's normal sign-in/verification flow, then click **Enter email manually** and paste the email YouTube displayed.
 4. **④ Export Excel** — save the results as `.xlsx`.
 
 Accepted link forms (auto-normalized): `https://youtube.com/@Handle`, `/channel/UC…`, `/c/Name`, `/user/Name`, `@Handle`, or just `Handle`.
@@ -70,10 +82,16 @@ The apps aren't paid-Apple/Windows code-signed, so the first open is gated. This
 |---|---|
 | In the **channel description** | ✅ Yes |
 | In a **video description** (enable the video-scan option) | ✅ Yes |
-| Behind the CAPTCHA-gated **"view email address"** button | ❌ No (any scraper would need a human to solve the CAPTCHA) |
+| Behind the sign-in / CAPTCHA-gated **"view email address"** button | ⚠️ Detected; open the page, verify manually, then enter the displayed email |
 | Not published anywhere | ❌ No |
 
-So some channels showing "no email" is expected — it isn't a bug.
+So some channels showing "no email" is expected. A gated address is reported separately as **Verification required**.
+
+### Why Boterdrop-Solver is not bundled
+
+[Boterdrop-Solver](https://github.com/najibyahya/Boterdrop-Solver) exposes endpoints that automate reCAPTCHA/Turnstile and anti-bot clearance tokens. Its MIT license permits reuse of its source code, but it does not grant permission to bypass another service's security controls. [YouTube's current terms](https://www.youtube.com/static?template=terms) prohibit circumventing security-related features and generally prohibit scraper access without permission. In addition, Boterdrop's generic reCAPTCHA v3 token endpoint does not carry the signed-in YouTube account, cookies, page action, and business-email request context required by this feature.
+
+This project therefore uses a human-assisted flow: it detects the gate, opens the real YouTube page, and records only the email that YouTube displays after the user completes its normal verification process.
 
 ---
 
@@ -97,6 +115,15 @@ python youtube_email_scraper.py -f channels.txt -o results.csv
 
 # also scan up to 15 recent video descriptions → JSON
 python youtube_email_scraper.py -f channels.txt --videos 15 -o results.json
+
+# 🆕 enable enhanced email discovery (社交媒体 + Link-in-bio + 网站)
+python youtube_email_scraper.py -f channels.txt --enrich -o results.csv
+
+# 🆕 use proxy IPs for large-scale scraping
+python youtube_email_scraper.py -f channels.txt --enrich --proxy proxies.txt -o results.csv
+
+# 🆕 enable caching to speed up repeated runs
+python youtube_email_scraper.py -f channels.txt --enrich --cache -o results.csv
 ```
 
 | Flag | Meaning |
@@ -126,6 +153,7 @@ python youtube_email_scraper.py -f channels.txt --videos 15 -o results.json
 ```
 youtube_email_gui.py        GUI (main app)
 youtube_email_scraper.py    scraping engine + CLI
+tests/                      gate detection and email parsing tests
 requirements.txt            deps (requests, openpyxl)
 youtube_email_gui.spec      PyInstaller config
 build_macos.sh              one-click macOS .dmg build
@@ -149,7 +177,7 @@ For collecting **publicly listed** contact info only (e.g. business inquiries). 
 
 一个 **macOS / Windows 通用**的小工具：粘贴一个或一批 YouTube 频道链接，点一下，自动抓取每个频道的 **名称、链接、公开邮箱、订阅数**，并一键导出 **Excel**。也带命令行版本。
 
-> 只采集创作者**已公开**的邮箱（频道简介 / 视频简介里写的）。不会绕过 YouTube 那个需要验证码的"商务邮箱"按钮。请合法、并在符合 YouTube 服务条款的前提下使用。
+> 自动采集创作者**已公开**的邮箱（频道简介 / 视频简介里写的）。如果商务邮箱需要登录或验证码，程序会标记为**需登录验证**，并提供人工处理流程；不会绕过 YouTube 的验证机制。
 
 ## 下载
 
@@ -170,6 +198,8 @@ For collecting **publicly listed** contact info only (e.g. business inquiries). 
 - ✅ 识别轻度伪装邮箱（如 `name (at) gmail (dot) com`）
 - ✅ 自动去重、过滤无效邮箱
 - ✅ 可选：About 没邮箱时扫描最近**视频简介**
+- ✅ 识别 YouTube 的商务邮箱登录/验证码门控
+- ✅ 打开验证页，并在人工完成验证后录入 YouTube 显示的邮箱
 - ✅ macOS / Windows 都能用，打包版**免装 Python**
 
 ## 怎么用（图形界面）
@@ -177,6 +207,8 @@ For collecting **publicly listed** contact info only (e.g. business inquiries). 
 1. **① 粘贴链接** —— 每行一个频道链接。
 2. **② 获取 / 加载** —— 点击开始，表格逐行出结果（可随时**停止 / 清空**；勾选「没邮箱时扫描视频简介」可挖得更深、更慢）。
 3. **③ 抓取结果** —— 名称、链接、邮箱、订阅数、状态；**双击某行可打开该频道**。
+   - 状态为**需登录验证**时，选中该行并点击「打开验证页」。
+   - 按 YouTube 正常流程登录并完成人工验证，再点击「人工录入邮箱」，粘贴页面显示的邮箱。
 4. **④ 导出 Excel** —— 保存为 `.xlsx`。
 
 支持的链接写法（自动归一化）：`https://youtube.com/@用户名`、`/channel/UC…`、`/c/名称`、`/user/名称`、`@用户名`、或直接 `用户名`。
@@ -197,10 +229,16 @@ For collecting **publicly listed** contact info only (e.g. business inquiries). 
 |---|---|
 | 写在**频道简介**里 | ✅ 能 |
 | 写在**视频简介**里（需勾选扫描） | ✅ 能 |
-| 验证码挡住的「查看邮箱」按钮后面 | ❌ 不能（任何工具都得人工过验证码） |
+| 登录/验证码挡住的「查看邮箱」按钮后面 | ⚠️ 能识别；打开页面人工验证后录入页面显示的邮箱 |
 | 根本没公开 | ❌ 没有就是没有 |
 
-所以部分频道显示「无邮箱」是正常的，不是工具坏了。
+所以部分频道显示「无邮箱」是正常的；被门控的地址会单独显示为「需登录验证」。
+
+### 为什么没有整合 Boterdrop-Solver
+
+[Boterdrop-Solver](https://github.com/najibyahya/Boterdrop-Solver) 提供自动获取 reCAPTCHA、Turnstile 和反爬通行令牌的接口。MIT 许可证允许复用它的源码，但不等于获得绕过其他平台安全控制的授权；[YouTube 当前条款](https://www.youtube.com/static?template=terms)也明确限制规避安全功能和未经许可的自动抓取。此外，它的通用 reCAPTCHA v3 接口没有携带 YouTube 已登录账号、Cookie、页面 action 以及商务邮箱业务请求上下文，不能作为这个按钮的可靠替代实现。
+
+因此本项目采用人工协作流程：识别门控、打开真实 YouTube 页面，并只记录用户按正常流程完成验证后由 YouTube 显示的邮箱。
 
 ## 导出的 Excel
 

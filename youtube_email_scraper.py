@@ -35,8 +35,9 @@ Accepted inputs per channel (all normalized automatically):
 
 Notes
 -----
-* Only emails the creator chose to publish publicly are returned. The
-  CAPTCHA-gated "Business email" reveal button is intentionally NOT bypassed.
+* Only emails the creator chose to publish publicly are returned. Channels
+  whose business email requires sign-in / verification are reported as
+  ``verification_required``; the verification step is never bypassed.
 * Be polite: a delay between requests is applied by default. Scraping at scale
   may violate YouTube's Terms of Service — use responsibly and lawfully.
 """
@@ -51,9 +52,27 @@ import re
 import sys
 import time
 from dataclasses import dataclass, field, asdict
-from typing import Iterable
+from typing import Iterable, Optional
 
 import requests
+
+# Import enrichment modules (optional, graceful degradation if not available)
+try:
+    from utils.obfuscation import extract_emails_enhanced
+    from utils.proxy_manager import ProxyManager, fetch_with_proxy
+    from utils.cache import RequestCache, cached_get
+    HAVE_UTILS = True
+except ImportError:
+    HAVE_UTILS = False
+
+try:
+    from enrichment.social_media import scrape_social_emails
+    from enrichment.biolink import scrape_biolink_emails
+    from enrichment.website import scrape_website_emails
+    from enrichment.community import scrape_community_emails
+    HAVE_ENRICHMENT = True
+except ImportError:
+    HAVE_ENRICHMENT = False
 
 # --------------------------------------------------------------------------- #
 # Configuration
@@ -76,8 +95,8 @@ EMAIL_RE = re.compile(
 #   "name (at) gmail (dot) com" / "name [at] gmail [dot] com" / "name at gmail dot com"
 # The "at"/"dot" tokens MUST be bracketed or whitespace-delimited — never glued
 # inside a real word (otherwise "Atualizadas. Os" would parse as es@ualizadas.os).
-_AT = r"(?:[\(\[\{]\s*at\s*[\)\]\}]|\s+at\s+)"
-_DOT = r"(?:[\(\[\{]\s*dot\s*[\)\]\}]|\s+dot\s+)"
+_AT = r"(?:\s*[\(\[\{]\s*at\s*[\)\]\}]\s*|\s+at\s+)"
+_DOT = r"(?:\s*[\(\[\{]\s*dot\s*[\)\]\}]\s*|\s+dot\s+)"
 OBFUSCATED_RE = re.compile(
     r"([a-zA-Z0-9._%+\-]+)" + _AT +
     r"([a-zA-Z0-9.\-]+?)" + _DOT + r"([a-zA-Z]{2,24})",
@@ -137,12 +156,24 @@ class ChannelResult:
     subscribers: str = ""
     emails: list[str] = field(default_factory=list)
     source: str = ""          # where the email(s) came from
-    status: str = "ok"        # ok | no_email | error
+    status: str = "ok"        # ok | no_email | verification_required | error
     error: str = ""
 
     @property
     def emails_str(self) -> str:
         return "; ".join(self.emails)
+
+
+@dataclass
+class EnrichmentConfig:
+    """Configuration for email enrichment features."""
+    enabled: bool = False
+    social_media: bool = True
+    biolink: bool = True
+    website_deep: bool = True
+    community_posts: bool = True
+    max_website_depth: int = 2
+    max_website_pages: int = 10
 
 
 # --------------------------------------------------------------------------- #
@@ -203,6 +234,15 @@ def valid_email(e: str) -> bool:
 
 def extract_emails(text: str) -> list[str]:
     """Pull plain and lightly-obfuscated emails out of free text."""
+    # Use enhanced extractor if available
+    if HAVE_UTILS:
+        return extract_emails_enhanced(text, existing_extractor=_extract_emails_basic)
+    else:
+        return _extract_emails_basic(text)
+
+
+def _extract_emails_basic(text: str) -> list[str]:
+    """Basic email extraction (original implementation)."""
     found: list[str] = []
     for m in EMAIL_RE.findall(text or ""):
         e = clean_email(m)
@@ -249,6 +289,38 @@ def _walk_collect(obj, key_names: set[str], out: list):
     elif isinstance(obj, list):
         for item in obj:
             _walk_collect(item, key_names, out)
+
+
+def _walk_has_key(obj, key_names: set[str]) -> bool:
+    if isinstance(obj, dict):
+        for key, value in obj.items():
+            if key in key_names:
+                return True
+            if _walk_has_key(value, key_names):
+                return True
+    elif isinstance(obj, list):
+        return any(_walk_has_key(item, key_names) for item in obj)
+    return False
+
+
+def has_business_email_gate(data: dict, page_html: str) -> bool:
+    """Detect YouTube's sign-in / verification-gated business email control."""
+    gate_keys = {
+        "signInForBusinessEmail",
+        "businessEmailButton",
+        "businessEmailLabel",
+        "businessEmailRevealButton",
+    }
+    if _walk_has_key(data, gate_keys):
+        return True
+
+    # Keep HTML fallbacks narrow: generic reCAPTCHA config appears on normal
+    # YouTube pages and does not prove that this channel exposes a gated email.
+    return any(marker in page_html for marker in (
+        '"signInForBusinessEmail"',
+        "Sign in to see email address",
+        "View email address",
+    ))
 
 
 def extract_channel_meta(data: dict, page_html: str) -> dict:
@@ -375,7 +447,8 @@ def scan_recent_videos(session: requests.Session, channel_url: str,
 # --------------------------------------------------------------------------- #
 
 def scrape_channel(session: requests.Session, raw_input: str,
-                   video_limit: int = 0) -> ChannelResult:
+                   video_limit: int = 0, enrichment: Optional[EnrichmentConfig] = None,
+                   cache: Optional[RequestCache] = None) -> ChannelResult:
     result = ChannelResult(input=raw_input)
     channel_url = normalize_channel_url(raw_input)
     if not channel_url:
@@ -423,8 +496,90 @@ def scrape_channel(session: requests.Session, raw_input: str,
             result.source = vsrc or "video_description"
 
     result.emails = emails
-    result.status = "ok" if emails else "no_email"
+    if emails:
+        result.status = "ok"
+    elif has_business_email_gate(data, html):
+        result.status = "verification_required"
+        result.source = "business_email_gate"
+    else:
+        result.status = "no_email"
+
+    # If no emails found and enrichment is enabled, try additional sources
+    if not emails and enrichment and enrichment.enabled and HAVE_ENRICHMENT:
+        enrichment_emails, enrichment_source = _try_enrichment(
+            result, meta, session, enrichment, cache
+        )
+        if enrichment_emails:
+            result.emails = enrichment_emails
+            result.source = enrichment_source
+            result.status = "ok"
+
     return result
+
+
+def _try_enrichment(
+    result: ChannelResult,
+    meta: dict,
+    session: requests.Session,
+    config: EnrichmentConfig,
+    cache: Optional[RequestCache]
+) -> tuple[list[str], str]:
+    """
+    Try enrichment strategies to find emails when basic scraping fails.
+
+    Returns:
+        Tuple of (emails found, source description)
+    """
+    all_text = meta["description"] + " " + " ".join(meta["links"])
+
+    # Strategy 1: Social media cross-reference
+    if config.social_media:
+        try:
+            emails, source = scrape_social_emails(all_text, session, delay=0.8)
+            if emails:
+                return emails, f"enrichment:{source}"
+        except Exception:
+            pass
+
+    # Strategy 2: Link-in-bio pages
+    if config.biolink:
+        try:
+            emails, source = scrape_biolink_emails(all_text, session)
+            if emails:
+                return emails, f"enrichment:{source}"
+        except Exception:
+            pass
+
+    # Strategy 3: Website deep crawl
+    if config.website_deep and meta["links"]:
+        for link in meta["links"][:2]:  # Only check first 2 website links
+            # Skip social media URLs
+            if any(domain in link.lower() for domain in
+                   ["instagram.com", "twitter.com", "x.com", "tiktok.com",
+                    "facebook.com", "linktr.ee", "beacons.ai"]):
+                continue
+
+            try:
+                emails, source = scrape_website_emails(
+                    link, session,
+                    max_depth=config.max_website_depth,
+                    max_pages=config.max_website_pages
+                )
+                if emails:
+                    return emails, f"enrichment:{source}"
+            except Exception:
+                pass
+
+    # Strategy 4: Community posts
+    if config.community_posts:
+        try:
+            emails, source = scrape_community_emails(result.channel_url, session)
+            if emails:
+                return emails, f"enrichment:{source}"
+        except Exception:
+            pass
+
+    return [], ""
 
 
 # --------------------------------------------------------------------------- #
@@ -478,6 +633,45 @@ def build_parser() -> argparse.ArgumentParser:
                         "descriptions (default 0 = off)")
     p.add_argument("--delay", type=float, default=1.5,
                    help="seconds to wait between channels (default 1.5)")
+
+    # Enrichment options
+    enrich_group = p.add_argument_group("enrichment options",
+                                        "Advanced email discovery strategies")
+    enrich_group.add_argument("--enrich", action="store_true",
+                             help="enable all enrichment features (social media, "
+                                  "biolinks, website crawling, community posts)")
+    enrich_group.add_argument("--enrich-social", action="store_true",
+                             help="check Instagram/Twitter/TikTok profiles")
+    enrich_group.add_argument("--enrich-biolink", action="store_true",
+                             help="scrape Linktree/Beacons link-in-bio pages")
+    enrich_group.add_argument("--enrich-website", action="store_true",
+                             help="deep crawl linked websites for contact pages")
+    enrich_group.add_argument("--enrich-community", action="store_true",
+                             help="check YouTube community posts and pinned comments")
+    enrich_group.add_argument("--website-depth", type=int, default=2,
+                             help="max depth for website crawling (default 2)")
+    enrich_group.add_argument("--website-pages", type=int, default=10,
+                             help="max pages to check per website (default 10)")
+
+    # Proxy options
+    proxy_group = p.add_argument_group("proxy options",
+                                       "Use proxy IPs to avoid rate limiting")
+    proxy_group.add_argument("--proxy", metavar="FILE",
+                            help="file with proxy URLs (one per line, format: http://host:port)")
+    proxy_group.add_argument("--proxy-rotation", choices=["round_robin", "random"],
+                            default="round_robin",
+                            help="proxy rotation strategy (default: round_robin)")
+
+    # Cache options
+    cache_group = p.add_argument_group("cache options",
+                                       "Cache HTTP requests to speed up repeated runs")
+    cache_group.add_argument("--cache", action="store_true",
+                            help="enable request caching (default: disabled)")
+    cache_group.add_argument("--cache-dir", default=".cache",
+                            help="cache directory (default: .cache)")
+    cache_group.add_argument("--cache-ttl", type=int, default=3600,
+                            help="cache TTL in seconds (default: 3600 = 1 hour)")
+
     return p
 
 
@@ -503,21 +697,93 @@ def main(argv: list[str] | None = None) -> int:
         build_parser().print_help()
         return 1
 
-    session = requests.Session()
+    # Setup enrichment config
+    enrichment_config = None
+    if args.enrich or args.enrich_social or args.enrich_biolink or \
+       args.enrich_website or args.enrich_community:
+        if not HAVE_ENRICHMENT:
+            print("Warning: enrichment modules not available. "
+                  "Continuing with basic scraping only.", file=sys.stderr)
+        else:
+            enrichment_config = EnrichmentConfig(
+                enabled=True,
+                social_media=args.enrich or args.enrich_social,
+                biolink=args.enrich or args.enrich_biolink,
+                website_deep=args.enrich or args.enrich_website,
+                community_posts=args.enrich or args.enrich_community,
+                max_website_depth=args.website_depth,
+                max_website_pages=args.website_pages,
+            )
+            print(f"Enrichment enabled: social={enrichment_config.social_media}, "
+                  f"biolink={enrichment_config.biolink}, "
+                  f"website={enrichment_config.website_deep}, "
+                  f"community={enrichment_config.community_posts}",
+                  file=sys.stderr)
+
+    # Setup proxy manager
+    proxy_manager = None
+    if args.proxy:
+        if not HAVE_UTILS:
+            print("Warning: proxy manager not available. "
+                  "Continuing without proxies.", file=sys.stderr)
+        else:
+            try:
+                proxy_manager = ProxyManager.from_file(
+                    args.proxy,
+                    rotation=args.proxy_rotation
+                )
+                print(f"Loaded {len(proxy_manager.proxies)} proxies "
+                      f"(rotation: {args.proxy_rotation})", file=sys.stderr)
+            except OSError as e:
+                print(f"error: cannot read proxy file {args.proxy}: {e}",
+                      file=sys.stderr)
+                return 2
+
+    # Setup cache
+    cache = None
+    if args.cache:
+        if not HAVE_UTILS:
+            print("Warning: cache not available. Continuing without cache.",
+                  file=sys.stderr)
+        else:
+            cache = RequestCache(cache_dir=args.cache_dir, ttl=args.cache_ttl)
+            print(f"Cache enabled: dir={args.cache_dir}, ttl={args.cache_ttl}s",
+                  file=sys.stderr)
+
+    # Create session (with or without proxy)
+    if proxy_manager:
+        session = proxy_manager.get_session(HEADERS)
+    else:
+        session = requests.Session()
+        session.headers.update(HEADERS)
+
     results: list[ChannelResult] = []
     total = len(inputs)
     for idx, raw in enumerate(inputs, 1):
         print(f"[{idx}/{total}] {raw} ...", end=" ", flush=True, file=sys.stderr)
-        res = scrape_channel(session, raw, video_limit=args.videos)
+
+        res = scrape_channel(
+            session, raw,
+            video_limit=args.videos,
+            enrichment=enrichment_config,
+            cache=cache
+        )
+
         results.append(res)
         if res.status == "ok":
-            print(f"OK  {res.emails_str}", file=sys.stderr)
+            print(f"OK  {res.emails_str} (from: {res.source})", file=sys.stderr)
+        elif res.status == "verification_required":
+            print("sign-in / manual verification required", file=sys.stderr)
         elif res.status == "no_email":
             print("no email found", file=sys.stderr)
         else:
             print(f"ERROR {res.error}", file=sys.stderr)
+
+        # Get new session for next request if using proxies
         if idx < total:
             time.sleep(args.delay)
+            if proxy_manager:
+                session = proxy_manager.get_session(HEADERS)
 
     # console summary
     print()
@@ -527,6 +793,18 @@ def main(argv: list[str] | None = None) -> int:
             print(f"{r.channel_name or r.channel_url}\t{r.emails_str}")
     print(f"\nScanned {total} channel(s); found emails for {found}.",
           file=sys.stderr)
+
+    # Show proxy stats if used
+    if proxy_manager:
+        stats = proxy_manager.get_stats()
+        print(f"Proxy stats: {stats['available']}/{stats['total']} available, "
+              f"{stats['failed']} failed", file=sys.stderr)
+
+    # Show cache stats if used
+    if cache:
+        stats = cache.get_stats()
+        print(f"Cache stats: {stats['valid_entries']} entries, "
+              f"{stats['total_size_mb']} MB", file=sys.stderr)
 
     if args.output:
         if args.output.lower().endswith(".json"):

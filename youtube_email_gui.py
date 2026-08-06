@@ -20,15 +20,21 @@ from __future__ import annotations
 import queue
 import threading
 import webbrowser
-from dataclasses import asdict
 
 import tkinter as tk
-from tkinter import ttk, filedialog, messagebox
+from tkinter import ttk, filedialog, messagebox, simpledialog
 
 import requests
 
 # 复用命令行版本里的抓取逻辑
-from youtube_email_scraper import scrape_channel, ChannelResult
+from youtube_email_scraper import (
+    ChannelResult,
+    EnrichmentConfig,
+    about_url,
+    extract_emails,
+    scrape_channel,
+    HAVE_ENRICHMENT,
+)
 
 try:
     from openpyxl import Workbook
@@ -46,7 +52,12 @@ COLUMNS = [
     ("subscribers", "订阅数", 120),
     ("status", "状态", 90),
 ]
-STATUS_TEXT = {"ok": "成功", "no_email": "无邮箱", "error": "错误"}
+STATUS_TEXT = {
+    "ok": "成功",
+    "no_email": "无邮箱",
+    "verification_required": "需登录验证",
+    "error": "错误",
+}
 
 
 class ScraperGUI:
@@ -99,6 +110,18 @@ class ScraperGUI:
             side="left"
         )
 
+        # Enrichment option
+        self.enable_enrichment = tk.BooleanVar(value=False)
+        enrich_text = "启用增强搜索（社交媒体+Link-in-bio+网站）"
+        if not HAVE_ENRICHMENT:
+            enrich_text += " [未安装]"
+        ttk.Checkbutton(
+            bar,
+            text=enrich_text,
+            variable=self.enable_enrichment,
+            state="normal" if HAVE_ENRICHMENT else "disabled",
+        ).pack(side="left", padx=(15, 0))
+
         self.btn_fetch = ttk.Button(bar, text="② 获取 / 加载", command=self.on_fetch)
         self.btn_fetch.pack(side="right", padx=(6, 0))
         self.btn_cancel = ttk.Button(
@@ -120,6 +143,7 @@ class ScraperGUI:
             anchor = "center" if key in ("subscribers", "status") else "w"
             self.tree.column(key, width=width, anchor=anchor, stretch=(key == "channel_url"))
         self.tree.tag_configure("no_email", foreground="#b06f00")
+        self.tree.tag_configure("verification_required", foreground="#8e5b00")
         self.tree.tag_configure("error", foreground="#c0392b")
 
         vs = ttk.Scrollbar(mid, orient="vertical", command=self.tree.yview)
@@ -131,6 +155,7 @@ class ScraperGUI:
         mid.rowconfigure(0, weight=1)
         mid.columnconfigure(0, weight=1)
         self.tree.bind("<Double-1>", self._open_selected)
+        self.tree.bind("<<TreeviewSelect>>", self._on_selection_changed)
 
         # ---- 底部：进度 + 导出 ----
         bottom = ttk.Frame(self.root)
@@ -138,6 +163,16 @@ class ScraperGUI:
 
         self.progress = ttk.Progressbar(bottom, mode="determinate")
         self.progress.pack(side="left", fill="x", expand=True)
+
+        self.btn_manual_email = ttk.Button(
+            bottom, text="人工录入邮箱", command=self.on_manual_email, state="disabled"
+        )
+        self.btn_manual_email.pack(side="right", padx=(8, 0))
+
+        self.btn_open_verify = ttk.Button(
+            bottom, text="打开验证页", command=self.on_open_verification, state="disabled"
+        )
+        self.btn_open_verify.pack(side="right", padx=(8, 0))
 
         self.btn_export = ttk.Button(
             bottom, text="④ 导出 Excel", command=self.on_export, state="disabled"
@@ -175,8 +210,22 @@ class ScraperGUI:
         self.progress.config(maximum=len(urls), value=0)
 
         video_limit = self.video_count.get() if self.scan_videos.get() else 0
+
+        # Setup enrichment config
+        enrichment_config = None
+        if self.enable_enrichment.get() and HAVE_ENRICHMENT:
+            enrichment_config = EnrichmentConfig(
+                enabled=True,
+                social_media=True,
+                biolink=True,
+                website_deep=True,
+                community_posts=True,
+                max_website_depth=2,
+                max_website_pages=10,
+            )
+
         self.worker = threading.Thread(
-            target=self._work, args=(urls, video_limit), daemon=True
+            target=self._work, args=(urls, video_limit, enrichment_config), daemon=True
         )
         self.worker.start()
 
@@ -189,10 +238,11 @@ class ScraperGUI:
         self.tree.delete(*self.tree.get_children())
         self.progress.config(value=0)
         self.btn_export.config(state="disabled")
+        self.btn_open_verify.config(state="disabled")
+        self.btn_manual_email.config(state="disabled")
         self.status_var.set("就绪")
 
     def on_export(self) -> None:
-        rows = [r for r in self.results if r.status != "error" or r.emails]
         if not self.results:
             messagebox.showinfo(APP_TITLE, "没有可导出的数据。")
             return
@@ -217,16 +267,60 @@ class ScraperGUI:
         if messagebox.askyesno(APP_TITLE, f"已导出：\n{path}\n\n是否现在打开？"):
             webbrowser.open(f"file://{path}")
 
+    def on_open_verification(self) -> None:
+        selected = self._selected_result()
+        if selected is None:
+            return
+        _index, result = selected
+        webbrowser.open(about_url(result.channel_url))
+        self.status_var.set("已打开频道 About 页，请按 YouTube 正常流程登录并完成验证。")
+
+    def on_manual_email(self) -> None:
+        selected = self._selected_result()
+        if selected is None:
+            return
+        index, result = selected
+        value = simpledialog.askstring(
+            APP_TITLE,
+            "完成 YouTube 登录/验证后，把页面显示的邮箱粘贴到这里：",
+            parent=self.root,
+        )
+        if value is None:
+            return
+        emails = extract_emails(value)
+        if not emails:
+            messagebox.showwarning(APP_TITLE, "没有识别到有效邮箱，请检查后重试。")
+            return
+
+        result.emails = emails
+        result.source = "manual_after_verification"
+        result.status = "ok"
+        result.error = ""
+        self._refresh_result_row(index, result)
+        self.status_var.set(f"已人工录入：{result.emails_str}")
+        self.btn_export.config(state="normal")
+
     # ------------------------------------------------------------- worker
-    def _work(self, urls: list[str], video_limit: int) -> None:
+    def _work(self, urls: list[str], video_limit: int, enrichment_config=None) -> None:
         session = requests.Session()
         for idx, url in enumerate(urls, 1):
             if self.cancel_flag.is_set():
                 self.msg_queue.put(("done", "已停止"))
                 return
-            self.msg_queue.put(("status", f"[{idx}/{len(urls)}] 抓取中：{url}"))
+
+            # Update status message
+            status_msg = f"[{idx}/{len(urls)}] 抓取中：{url}"
+            if enrichment_config and enrichment_config.enabled:
+                status_msg += " (增强模式)"
+            self.msg_queue.put(("status", status_msg))
+
             try:
-                res = scrape_channel(session, url, video_limit=video_limit)
+                res = scrape_channel(
+                    session, url,
+                    video_limit=video_limit,
+                    enrichment=enrichment_config,
+                    cache=None  # No cache in GUI mode for now
+                )
             except Exception as e:  # 兜底，避免线程崩溃
                 res = ChannelResult(input=url, channel_url=url,
                                     status="error", error=str(e))
@@ -249,16 +343,13 @@ class ScraperGUI:
 
     def _add_result(self, res: ChannelResult) -> None:
         self.results.append(res)
-        tag = res.status if res.status in ("no_email", "error") else ""
+        index = len(self.results) - 1
+        tag = res.status if res.status in (
+            "no_email", "verification_required", "error"
+        ) else ""
         self.tree.insert(
-            "", "end",
-            values=(
-                res.channel_name or "(未知)",
-                res.channel_url,
-                res.emails_str or ("—" if res.status == "no_email" else res.error),
-                res.subscribers or "",
-                STATUS_TEXT.get(res.status, res.status),
-            ),
+            "", "end", iid=str(index),
+            values=self._result_values(res),
             tags=(tag,) if tag else (),
         )
         self.progress.step(1)
@@ -305,11 +396,49 @@ class ScraperGUI:
         wb.save(path)
 
     # ------------------------------------------------------------- helpers
+    def _result_values(self, res: ChannelResult) -> tuple[str, ...]:
+        empty_email = {
+            "no_email": "—",
+            "verification_required": "请打开验证页后人工录入",
+        }.get(res.status, res.error)
+        return (
+            res.channel_name or "(未知)",
+            res.channel_url,
+            res.emails_str or empty_email,
+            res.subscribers or "",
+            STATUS_TEXT.get(res.status, res.status),
+        )
+
+    def _selected_result(self) -> tuple[int, ChannelResult] | None:
+        selection = self.tree.selection()
+        if not selection:
+            return None
+        try:
+            index = int(selection[0])
+            return index, self.results[index]
+        except (ValueError, IndexError):
+            return None
+
+    def _refresh_result_row(self, index: int, res: ChannelResult) -> None:
+        tag = res.status if res.status in (
+            "no_email", "verification_required", "error"
+        ) else ""
+        self.tree.item(
+            str(index), values=self._result_values(res), tags=(tag,) if tag else ()
+        )
+
+    def _on_selection_changed(self, _event=None) -> None:
+        state = "normal" if self._selected_result() is not None else "disabled"
+        self.btn_open_verify.config(state=state)
+        self.btn_manual_email.config(state=state)
+
     def _open_selected(self, _event=None) -> None:
-        sel = self.tree.selection()
-        if not sel:
+        selected = self._selected_result()
+        if selected is None:
             return
-        url = self.tree.item(sel[0], "values")[1]
+        _index, result = selected
+        url = (about_url(result.channel_url)
+               if result.status == "verification_required" else result.channel_url)
         if url.startswith("http"):
             webbrowser.open(url)
 

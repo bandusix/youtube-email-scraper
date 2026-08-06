@@ -1,0 +1,19 @@
+# Proxy List Example
+# 代理列表示例
+#
+# Format: protocol://host:port
+# 格式：协议://主机:端口
+#
+# Supported protocols: http, https, socks4, socks5
+# 支持的协议：http, https, socks4, socks5
+#
+# With authentication (如需认证):
+# http://username:password@host:port
+
+# Example proxies (示例代理 - 请替换为真实代理):
+# http://proxy1.example.com:8080
+# http://proxy2.example.com:8080
+# http://user:pass@proxy3.example.com:3128
+# socks5://proxy4.example.com:1080
+
+# Add your proxies below (在下方添加你的代理):
